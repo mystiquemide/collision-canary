@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+coverage/
+
+.env*
+!.env.example
+.vercel/
+
+.testmuai/evidence/
+.testmuai/sessions/
+
+*.log
+.DS_Store
