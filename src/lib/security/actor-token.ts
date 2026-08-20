@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 const TOKEN_VERSION = "v1";
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 
-type ActorTokenClaims = {
+export type ActorTokenClaims = {
   runId: string;
   actorKey: string;
   expiresAt: number;
