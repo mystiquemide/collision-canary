@@ -69,10 +69,12 @@ export async function createVerificationRun({
     const actorUrl = new URL("/lab/last-seat", baseUrl);
     actorUrl.searchParams.set("runId", runId);
     actorUrl.searchParams.set("actor", actor.actorKey);
-    actorUrl.searchParams.set(
-      "token",
-      createActorToken({ runId, actorKey: actor.actorKey, expiresAt }),
-    );
+    const token = createActorToken({
+      runId,
+      actorKey: actor.actorKey,
+      expiresAt,
+    });
+    actorUrl.hash = `token=${encodeURIComponent(token)}`;
 
     return {
       actorKey: actor.actorKey,

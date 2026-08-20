@@ -1,11 +1,15 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
 
 import {
   verifyRepairPacket,
   type RepairPacket,
 } from "@/modules/repair/repair-packet";
+
+const execFile = promisify(execFileCallback);
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -19,6 +23,27 @@ function ensureInsideRepository(path: string): string {
     throw new Error("Repair packet must be inside the repository.");
   }
   return resolved;
+}
+
+async function repositoryState(): Promise<{ head: string; files: Set<string> }> {
+  const { stdout: head } = await execFile("git", ["rev-parse", "HEAD"], {
+    cwd: process.cwd(),
+  });
+  const { stdout: status } = await execFile(
+    "git",
+    ["status", "--porcelain=v1", "--untracked-files=all"],
+    { cwd: process.cwd() },
+  );
+  const files = new Set(
+    status
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const path = line.slice(3).trim();
+        return path.includes(" -> ") ? path.split(" -> ").at(-1)! : path;
+      }),
+  );
+  return { head: head.trim(), files };
 }
 
 function repairPrompt(packet: RepairPacket): string {
@@ -69,6 +94,7 @@ async function main(): Promise<void> {
     return;
   }
 
+  const before = await repositoryState();
   const child = spawn(
     "codex",
     ["exec", "--cd", process.cwd(), "--sandbox", "workspace-write", "--json", prompt],
@@ -82,6 +108,25 @@ async function main(): Promise<void> {
       else reject(new Error(`Codex exited with code ${code ?? "unknown"}.`));
     });
   });
+
+  const after = await repositoryState();
+  if (after.head !== before.head) {
+    throw new Error("Codex changed Git history. Repair adapter refuses to continue.");
+  }
+
+  const allowedFiles = new Set([
+    ...packet.repairTarget.routes,
+    ...packet.repairTarget.modules,
+  ]);
+  const unexpectedFiles = [...after.files].filter(
+    (file) => !before.files.has(file) && !allowedFiles.has(file),
+  );
+
+  if (unexpectedFiles.length > 0) {
+    throw new Error(
+      `Codex changed files outside the repair packet: ${unexpectedFiles.join(", ")}`,
+    );
+  }
 }
 
 main().catch((error: unknown) => {

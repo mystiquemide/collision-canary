@@ -356,7 +356,7 @@ Request:
 }
 ```
 
-Response includes `runId`, `actorUrls`, `proofUrl`, and actor tokens embedded only in their URLs. Tokens are never returned by the proof projection.
+Response includes `runId`, `actorUrls`, and `proofUrl`. Actor handoff tokens live only in the URL fragment (`#token=...`), so browsers do not send them in HTTP requests, referrers, or server access logs. The actor page reads the fragment and sends the token in the `Authorization` header. Tokens are never returned by the proof projection.
 
 ### `POST /api/v1/runs/{runId}/actors/{actorKey}/arm`
 
