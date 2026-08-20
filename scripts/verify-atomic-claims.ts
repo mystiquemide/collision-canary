@@ -69,15 +69,30 @@ async function main(): Promise<void> {
   ] as const);
 
   try {
-    const [alice, bob] = await Promise.all([
+    const [aliceFirst, aliceRetry] = await Promise.all([
       claimService.claimSeat({ runId, actorKey: "alice" }),
-      claimService.claimSeat({ runId, actorKey: "bob" }),
+      claimService.claimSeat({ runId, actorKey: "alice" }),
     ]);
 
-    assert.ok(alice);
-    assert.ok(bob);
+    assert.ok(aliceFirst);
+    assert.ok(aliceRetry);
+    assert.equal(aliceFirst.outcome, "succeeded");
+    assert.equal(aliceRetry.outcome, "succeeded");
     assert.deepEqual(
-      [alice.outcome, bob.outcome].sort(),
+      [aliceFirst.idempotent, aliceRetry.idempotent].sort(),
+      [false, true],
+    );
+
+    const bob = await claimService.claimSeat({ runId, actorKey: "bob" });
+    assert.ok(bob);
+    assert.equal(bob.outcome, "rejected");
+
+    assert.deepEqual(
+      [aliceFirst.outcome, aliceRetry.outcome].sort(),
+      ["succeeded", "succeeded"],
+    );
+    assert.deepEqual(
+      [aliceFirst.outcome, bob.outcome].sort(),
       ["rejected", "succeeded"],
     );
 
@@ -105,7 +120,8 @@ async function main(): Promise<void> {
     console.log(
       JSON.stringify({
         status: "passed",
-        outcomes: [alice.outcome, bob.outcome].sort(),
+        outcomes: [aliceFirst.outcome, bob.outcome].sort(),
+        duplicateRetry: aliceRetry.idempotent,
         attempts: attempts.length,
         remaining: resource?.remaining,
       }),

@@ -190,11 +190,19 @@ async function claimAtomically({
   resourceId: string;
 }): Promise<ClaimResult> {
   const result = await db.execute(sql`
-    WITH target AS MATERIALIZED (
+    WITH actor_gate AS MATERIALIZED (
+      SELECT id
+      FROM run_actors
+      WHERE id = ${actorId}::uuid
+        AND run_id = ${runId}::uuid
+        AND status = 'released'::actor_status
+      FOR UPDATE
+    ), target AS MATERIALIZED (
       SELECT id, remaining
       FROM scenario_resources
       WHERE id = ${resourceId}::uuid
         AND run_id = ${runId}::uuid
+        AND EXISTS (SELECT 1 FROM actor_gate)
     ), claimed AS (
       UPDATE scenario_resources
       SET remaining = scenario_resources.remaining - 1,
@@ -233,6 +241,7 @@ async function claimAtomically({
               THEN 'succeeded'::actor_status
             ELSE 'rejected'::actor_status
           END,
+          request_at = COALESCE(request_at, now()),
           outcome_code = CASE
             WHEN (SELECT result FROM attempt) = 'succeeded'::claim_result
               THEN 'seat_claimed'::text
@@ -258,6 +267,10 @@ async function claimAtomically({
   };
 
   if (!row?.outcome || row.remaining === null) {
+    const existing = await readExistingAttempt(actorId);
+
+    if (existing) return existing;
+
     throw new Error("Atomic claim did not record a claim attempt.");
   }
 
