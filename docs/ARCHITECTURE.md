@@ -183,6 +183,8 @@ See [.env.example](../.env.example) for the local template.
 
 ## Scope limits
 
-The current implementation covers one versioned last-seat scenario and its
-backend proof path. Browser UI work is a separate client of these routes. A
-proof is evidence for the captured run, not a universal concurrency theorem.
+The current implementation covers one versioned last-seat reference scenario,
+its browser actors, and its proof and repair-cycle surfaces. The same barrier,
+claim, and invariant pattern can be adapted to other shared-state workflows,
+but this release does not accept an arbitrary external application URL. A proof
+is evidence for the captured run, not a universal concurrency theorem.

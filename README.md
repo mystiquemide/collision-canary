@@ -2,7 +2,7 @@
 
 **Catch the bug only two users can make.**
 
-Collision Canary drives two real browser actors at the exact same moment and proves whether your app keeps a simple promise: only one person can claim the last seat. Single-user tests never see this class of bug. It only shows up when two people act on one shared record in the same instant, and one row says yes to both.
+Collision Canary drives two real browser actors at the exact same moment and proves whether its bundled last-seat reference app keeps a simple promise: only one person can claim the final seat. Single-user tests never see this class of bug. It only shows up when two people act on one shared record in the same instant, and one row says yes to both.
 
 **Live app: https://collision-canary.vercel.app**
 
@@ -72,7 +72,7 @@ Requirements: Node.js 22+, pnpm 11+, and Neon (PostgreSQL) credentials.
 pnpm install
 vercel env pull .env.local --environment development
 pnpm db:migrate
-pnpm dev -- --port 3001
+pnpm exec next dev -p 3001
 ```
 
 Verify the full flow over HTTP:
@@ -95,7 +95,7 @@ Build a packet from a violated run, apply a local Codex repair, then link the cy
 
 ```bash
 pnpm build:repair-packet -- --run <violated-run-id> --out .collision-canary/runs/<run-id>
-pnpm repair:codex -- --packet .collision-canary/runs/<run-id>/repair-packet.json
+pnpm repair:codex -- --packet .collision-canary/runs/<run-id>/repair-packet.json --apply
 pnpm link:repair-cycle -- --failed-run <violated-run-id> --verified-run <verified-run-id> --packet .collision-canary/runs/<run-id>/repair-packet.json
 ```
 
@@ -111,7 +111,7 @@ The Codex adapter defaults to dry-run. `--apply` is an explicit local operation 
 
 ## Limitations
 
-A proof describes one observed run. It does not claim exhaustive verification of every possible schedule. The local failure fixture is disabled in production, and the production claim path stays atomic even if the fixture variable is present.
+A proof describes one observed run. It does not claim exhaustive verification of every possible schedule. This release ships one last-seat reference scenario rather than an arbitrary target-app adapter. The local failure fixture is disabled in production, and the production claim path stays atomic even if the fixture variable is present.
 
 Read the system decisions in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the visual system in [docs/DESIGN.md](docs/DESIGN.md).
 

@@ -251,7 +251,7 @@ Sections in order: nav pill, hero, runs on strip, problem, how it works, feature
 - Optional human band: a real photo of engineers at laptops. Search query: software engineers collaborating laptop candid.
 - Optional problem story: a real last seat moment. Search query: airplane window seat, or concert tickets phone.
 - Photo treatment: radius 16px, soft shadow, slight warm tint.
-- Photos are sourced from Unsplash with a valid API key and bound at build with correct attribution. No placeholder images ship. Key location is pending from the owner.
+- Photos are sourced from Unsplash and bound with correct attribution. No API key or placeholder asset ships to the browser.
 
 ## Build rules
 

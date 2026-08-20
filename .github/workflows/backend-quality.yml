@@ -17,6 +17,12 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.COLLISION_CANARY_DATABASE_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.COLLISION_CANARY_DATABASE_URL_UNPOOLED }}
+      LAB_SIGNING_SECRET: ${{ secrets.COLLISION_CANARY_LAB_SIGNING_SECRET }}
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3001
+      COLLISION_CANARY_FAILURE_FIXTURE: "false"
 
     steps:
       - name: Check out repository
@@ -45,15 +51,44 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Production build
+        run: pnpm build
+
       - name: Dependency audit
         run: pnpm audit
 
       - name: Check Drizzle schema
         run: pnpm db:check
-        env:
-          DATABASE_URL_UNPOOLED: postgresql://user:password@localhost:5432/collision_canary
 
       - name: Check trusted public URL handling
         run: pnpm test:public-base-url
-        env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/collision_canary
+
+      - name: Check actor guards
+        run: pnpm test:actor-guards
+
+      - name: Check atomic claims
+        run: pnpm test:atomic-claims
+
+      - name: Check invariant evaluation
+        run: pnpm test:invariant-evaluator
+
+      - name: Check repair cycles
+        run: pnpm test:repair-cycle
+
+      - name: Check the full HTTP flow
+        shell: bash
+        run: |
+          pnpm exec next start -p 3001 > /tmp/collision-canary-next.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3001/api/v1/health > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              sed -n '1,200p' /tmp/collision-canary-next.log
+              exit 1
+            fi
+            sleep 1
+          done
+          COLLISION_CANARY_BASE_URL=http://127.0.0.1:3001 pnpm test:backend-http
