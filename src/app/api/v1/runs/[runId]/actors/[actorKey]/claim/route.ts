@@ -4,7 +4,11 @@ import {
   authenticateActorRequest,
 } from "@/modules/actors/actor-guards";
 import { isActorKey, isUuid } from "@/modules/actors/barrier";
-import { claimSeat, ClaimStateError } from "@/modules/claims/claim-service";
+import {
+  claimSeat,
+  ClaimConfigurationError,
+  ClaimStateError,
+} from "@/modules/claims/claim-service";
 
 type RouteContext = {
   params: Promise<{ runId: string; actorKey: string }>;
@@ -59,6 +63,10 @@ export async function POST(
   } catch (error) {
     if (error instanceof ClaimStateError) {
       return errorResponse(requestId, error.code, error.message, 409);
+    }
+
+    if (error instanceof ClaimConfigurationError) {
+      return errorResponse(requestId, error.code, error.message, 500);
     }
 
     console.error(

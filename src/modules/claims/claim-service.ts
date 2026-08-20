@@ -24,6 +24,15 @@ export class ClaimStateError extends Error {
   }
 }
 
+export class ClaimConfigurationError extends Error {
+  readonly code = "failure_fixture_forbidden" as const;
+
+  constructor() {
+    super("The failure fixture is disabled in production.");
+    this.name = "ClaimConfigurationError";
+  }
+}
+
 type ActorClaimContext = {
   actorId: string;
   actorStatus: ActorStatus;
@@ -82,11 +91,15 @@ async function readExistingAttempt(actorId: string): Promise<ClaimResult | null>
   };
 }
 
-function failureFixtureEnabled(): boolean {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.COLLISION_CANARY_FAILURE_FIXTURE === "true"
-  );
+function claimMode(): "failure_fixture" | "atomic" {
+  const fixtureRequested =
+    process.env.COLLISION_CANARY_FAILURE_FIXTURE === "true";
+
+  if (fixtureRequested && process.env.NODE_ENV === "production") {
+    throw new ClaimConfigurationError();
+  }
+
+  return fixtureRequested ? "failure_fixture" : "atomic";
 }
 
 async function claimWithFailureFixture({
@@ -266,6 +279,7 @@ export async function claimSeat({
   runId: string;
   actorKey: ActorKey;
 }): Promise<ClaimResult | null> {
+  const mode = claimMode();
   const context = await loadClaimContext({ runId, actorKey });
 
   if (!context) return null;
@@ -287,7 +301,7 @@ export async function claimSeat({
     throw new ClaimStateError();
   }
 
-  if (failureFixtureEnabled()) {
+  if (mode === "failure_fixture") {
     return claimWithFailureFixture({
       runId,
       actorId: context.actorId,
