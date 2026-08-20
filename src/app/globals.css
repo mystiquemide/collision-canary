@@ -1,28 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090b0f;
-  --surface: #11151b;
-  --surface-raised: #171c23;
-  --border: #29323d;
-  --signal: #f6d84a;
-  --danger: #ff5d62;
-  --success: #45d39a;
-  --text: #f3f5f7;
-  --text-muted: #8c97a5;
-  --focus: #fff1a6;
+  --canvas: #f3efe8;
+  --card: #ffffff;
+  --ink: #272c34;
+  --muted: #6e7582;
+  --primary: #2e8bff;
+  --primary-press: #1e7cf5;
+  --secondary: #e8e5df;
+  --border: #e7e3db;
+  --accent-purple: #a855f7;
+  --accent-sky: #38bdf8;
+  --accent-indigo: #6366f1;
+  --waiting: #f5b93b;
+  --collision: #f0563a;
+  --verified: #1fb981;
+  --dot: #dbd6cc;
+  --focus: #2e8bff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-press: var(--primary-press);
+  --color-secondary: var(--secondary);
   --color-border: var(--border);
-  --color-signal: var(--signal);
-  --color-danger: var(--danger);
-  --color-success: var(--success);
-  --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-sky: var(--accent-sky);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-waiting: var(--waiting);
+  --color-collision: var(--collision);
+  --color-verified: var(--verified);
+  --color-dot: var(--dot);
   --color-focus: var(--focus);
   --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono), "Courier New", monospace;
@@ -33,13 +45,30 @@
 }
 
 html {
-  background: var(--background);
+  background: var(--canvas);
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--background);
-  color: var(--text);
+  background-color: var(--canvas);
+  background-image: radial-gradient(var(--dot) 1.1px, transparent 1.1px);
+  background-size: 22px 22px;
+  color: var(--ink);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

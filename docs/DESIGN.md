@@ -1,486 +1,264 @@
 ---
-version: alpha
+version: beta
 name: Collision Canary
-description: A compact diagnostic interface for synchronized browser actors and shared-state invariant proof.
+description: A warm, friendly interface for a serious idea. Two real users, one shared seat, one honest proof.
+theme: playful-consumer
 colors:
-  primary: "#F6D84A"
-  background: "#090B0F"
-  surface: "#11151B"
-  surfaceRaised: "#171C23"
-  border: "#29323D"
-  signal: "#F6D84A"
-  danger: "#FF5D62"
-  success: "#45D39A"
-  text: "#F3F5F7"
-  textMuted: "#8C97A5"
-  focus: "#FFF1A6"
+  canvas: "#F3EFE8"
+  card: "#FFFFFF"
+  ink: "#272C34"
+  muted: "#6E7582"
+  primary: "#2E8BFF"
+  primaryPress: "#1E7CF5"
+  secondary: "#E8E5DF"
+  border: "#E7E3DB"
+  accentPurple: "#A855F7"
+  accentSky: "#38BDF8"
+  accentIndigo: "#6366F1"
+  waiting: "#F5B93B"
+  collision: "#F0563A"
+  verified: "#1FB981"
+  dot: "#DBD6CC"
+  focus: "#2E8BFF"
 typography:
-  h1:
+  display:
     fontFamily: Geist
-    fontSize: 3.5rem
-    fontWeight: 650
+    fontWeight: 800
+    letterSpacing: "-0.03em"
     lineHeight: 1.02
-    letterSpacing: "-0.04em"
   h2:
     fontFamily: Geist
-    fontSize: 2rem
-    fontWeight: 620
-    lineHeight: 1.1
-    letterSpacing: "-0.025em"
+    fontWeight: 800
+    letterSpacing: "-0.02em"
+    lineHeight: 1.08
   body:
     fontFamily: Geist
-    fontSize: 1rem
     fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: "-0.005em"
-  label:
+    lineHeight: 1.5
+  eyebrow:
     fontFamily: Geist Mono
-    fontSize: 0.75rem
     fontWeight: 600
-    lineHeight: 1.3
-    letterSpacing: "0.06em"
+    fontSize: 0.64rem
+    letterSpacing: "0.08em"
+    textTransform: uppercase
   data:
     fontFamily: Geist Mono
-    fontSize: 0.875rem
     fontWeight: 500
-    lineHeight: 1.45
-    letterSpacing: "0em"
 rounded:
-  sm: 4px
-  md: 8px
-  lg: 12px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  pill: 999px
 spacing:
   xs: 4px
   sm: 8px
   md: 16px
   lg: 24px
   xl: 40px
-  section: 96px
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.background}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: 12px
-    height: 44px
-  button-primary-hover:
-    backgroundColor: "{colors.focus}"
-    textColor: "{colors.background}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: 12px
-    height: 44px
-  button-secondary:
-    backgroundColor: "{colors.surfaceRaised}"
-    textColor: "{colors.text}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: 12px
-    height: 44px
-  panel:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.lg}"
-    padding: 24px
-  metadata:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.textMuted}"
-    typography: "{typography.data}"
-    rounded: "{rounded.sm}"
-    padding: 8px
-  divider:
-    backgroundColor: "{colors.border}"
-    textColor: "{colors.text}"
-    height: 1px
-    width: 100%
-  status-waiting:
-    backgroundColor: "{colors.surfaceRaised}"
-    textColor: "{colors.signal}"
-    typography: "{typography.label}"
-    rounded: "{rounded.sm}"
-    padding: 8px
-  status-failed:
-    backgroundColor: "{colors.danger}"
-    textColor: "{colors.background}"
-    typography: "{typography.label}"
-    rounded: "{rounded.sm}"
-    padding: 8px
-  status-verified:
-    backgroundColor: "{colors.success}"
-    textColor: "{colors.background}"
-    typography: "{typography.label}"
-    rounded: "{rounded.sm}"
-    padding: 8px
+  section: 88px
+shadow:
+  card: "0 10px 26px rgba(30,40,60,0.08)"
+  raised: "0 14px 40px rgba(30,40,60,0.10)"
+  button: "0 6px 14px rgba(46,139,255,0.28)"
 ---
 
 ## Overview
 
-Collision Canary is an Agentic DevTool with the posture of a precise debugging instrument. The interface makes two independent browser actors and their shared state legible at a glance. It uses canary yellow as a controlled signal, red only for proven collision, and green only for a complete verified invariant.
+Collision Canary is a friendly, consumer grade interface for a serious engineering idea. It drives two real browsers at the exact same moment and proves whether an app keeps a simple promise: only one person can take the last seat.
 
-The emotional hook is simple: two green journeys can still leave one broken system.
+The tone is warm and playful, not stark. Cream canvas, soft dot grid, white cards with gentle shadows, one vivid blue for action, and colored icon tiles for personality. The substance stays honest: every number and ID on screen is a real database record, and the word verified only appears after a full pass.
+
+The emotional hook is unchanged: two people can each have a perfectly green journey and still leave one broken system.
+
+This document replaces the earlier dark diagnostic direction. The product logic, copy meaning, and honesty rules carry over. The visual skin is new.
 
 ### Brand core
 
 - Name: Collision Canary
 - Tagline: Catch the bug only two users can make.
-- One-line position: Synchronized browser actors expose shared-state failures and keep the coding agent working until the invariant holds.
-- Audience: AI-native product engineers, SDETs, engineering leads, and hackathon judges.
-- Personality: vigilant, exact, calm, technical, and honest about proof limits.
+- One line position: Two real browsers, one shared seat, one honest proof that only one user can win.
+- Audience: product engineers, founders, SDETs, and hackathon judges.
+- Personality: friendly, clear, playful, and honest about what a proof does and does not cover.
 
 ### Logo direction
 
-Use a split-path mark. Two rails approach one shared state and a sharp canary-beak shape interrupts the collision. The repaired state shows one rail continuing while the second stops cleanly. The geometry must remain readable at 16px.
-
-Do not use a generic `CC` monogram, robot face, neural-network nodes, shield, checkmark badge, or sponsor logo reconstruction.
-
-### Mascot direction
-
-The mascot is a compact mechanical canary sentinel with one diagnostic eye and a tail formed from two diverging rails. It is restrained and appears only in favicon, loading, empty, and pitch-transition contexts. It does not appear as a large friendly hero character.
-
-States:
-
-- Watching
-- Collision detected
-- Repair running
-- Invariant verified
+A rounded canary beak mark in warm amber next to the wordmark. Readable at 16px. No generic CC monogram, no robot face, no shield, no checkmark badge.
 
 ## Colors
 
-- Background `#090B0F`: near-black operating surface.
-- Surface `#11151B`: primary diagnostic panels.
-- Raised surface `#171C23`: selected rows, controls, and proof objects.
-- Border `#29323D`: crisp separation without glow.
-- Signal `#F6D84A`: canary warning and primary action.
-- Danger `#FF5D62`: confirmed invariant violation only.
-- Success `#45D39A`: complete verified invariant only.
-- Text `#F3F5F7`: primary copy.
-- Muted text `#8C97A5`: metadata and secondary explanation.
-- Focus `#FFF1A6`: visible keyboard focus and primary hover.
+- Canvas `#F3EFE8`: warm cream page background with a subtle dot grid.
+- Card `#FFFFFF`: panels, nav pill, feature cards, proof cards.
+- Ink `#272C34`: headlines and primary text.
+- Muted `#6E7582`: secondary copy and metadata.
+- Primary `#2E8BFF`: the single action color for primary buttons and links. Press state `#1E7CF5`.
+- Secondary `#E8E5DF`: soft gray for secondary buttons and the eyebrow pill.
+- Border `#E7E3DB`: light hairlines between surfaces.
+- Accent tiles: purple `#A855F7`, sky `#38BDF8`, indigo `#6366F1`. Used only on icon tiles for personality, never as status.
+- Waiting `#F5B93B`: amber, used only while actors wait at the barrier.
+- Collision `#F0563A`: soft coral, used only for a proven invariant violation.
+- Verified `#1FB981`: emerald, used only for a fully verified pass.
 
-No gradients. No glass blur. No pulsing green status dots. Status must use text, rails, stamps, or rows.
+Status colors are meaningful. Amber is waiting, coral is a real collision, emerald is a real pass. Do not use coral or emerald decoratively.
 
 ## Typography
 
-Use Geist for product copy and Geist Mono for evidence IDs, actor names, timestamps, invariant keys, reason codes, terminal excerpts, and numeric state.
+Geist for product and marketing copy, weight 800 for display and section headlines with tight tracking. Geist Mono for run IDs, actor names, timestamps, counts, invariant keys, and reason codes. A friendlier display face such as General Sans or Satoshi is an acceptable upgrade for headlines if added to the pipeline. Mono is an accent, never body.
 
 Rules:
 
-- Headings are compact and left aligned.
-- Body copy stays under 70 characters per line on marketing surfaces.
-- Uppercase mono labels use short operational language.
-- Mono is an accent, never the body font.
-- Proof numbers use tabular numerals.
-- The word `verified` appears only for a complete terminal result.
+- Headlines are bold and can be centered on marketing surfaces, left aligned in the app.
+- Body copy stays readable, under about 60 characters per line on marketing surfaces.
+- The word verified appears only for a complete terminal pass.
+- No em dashes anywhere in copy. Use periods, commas, or parentheses.
 
 ## Layout
 
-### Grid
-
-- Marketing pages: 12 columns, maximum width 1200px.
-- Product pages: 12 columns, maximum width 1440px.
-- Main product shell: 240px navigation rail plus flexible workspace on desktop.
-- Standard panel gap: 16px.
-- Section spacing: 96px desktop, 64px tablet, 48px mobile.
-- Primary proof content remains above the fold at 1440 by 900.
-
-### Density
-
-The product is compact and diagnostic. Use rows, timelines, and state tables before generic feature cards. Marketing sections may breathe, but the proof view should prioritize scanning speed.
+- Marketing pages: centered, max width 1100px, generous section spacing.
+- Product pages: max width 1200px, top bar navigation.
+- Canvas uses the cream background plus a subtle radial dot grid at about 22px spacing.
+- Cards are allowed and encouraged. Depth comes from soft shadows and light hairlines, not dark borders.
+- Section spacing about 88px desktop, 64px tablet, 48px mobile.
 
 ### Responsive behavior
 
-- Below 960px, navigation becomes a compact top bar.
-- Actor panels stack vertically while retaining shared timeline order.
-- The invariant and terminal verdict remain before verbose evidence.
-- Tables become labeled key-value stacks.
-- Every primary control remains at least 44px high.
-
-## Elevation & Depth
-
-Depth comes from surface changes and border contrast. Avoid large soft shadows.
-
-- Base panels use `surface` with one-pixel border.
-- Selected or active panels use `surfaceRaised`.
-- Modal or command surfaces may use a tight shadow with low blur and 35 percent black opacity.
-- Error and success states change border and label color without tinting the full page.
-
-## Shapes
-
-- Small controls: 4px radius.
-- Buttons and inputs: 8px radius.
-- Major panels: 12px radius.
-- Actor rails use square or lightly rounded endpoints.
-- Pills are limited to compact status labels.
-- Avoid oversized rounded rectangles.
+- Below 720px, the nav pill collapses to brand plus primary action, and links move to a menu.
+- Feature and step grids stack to one or two columns.
+- Proof before and after stacks vertically, verdict first.
+- Every primary control stays at least 44px high.
 
 ## Components
 
-### Product shell
+### Nav pill
 
-- Wordmark and current environment.
-- Navigation: New Run, Runs, Lab, System.
-- Persistent deadline text is excluded from the product UI.
-- Kane connection status uses a labeled row, not a dot.
-
-### Invariant composer
-
-- Scenario selector.
-- Read-only invariant statement for V1.
-- Actor count and shared resource summary.
-- Primary action: `Start paired run`.
-- Secondary action: `Inspect latest proof`.
-
-### Actor card
-
-- Actor name and stable key.
-- Browser status.
-- Barrier status.
-- Visible user outcome.
-- Request and completion timestamps.
-- Kane terminal summary link when available.
-
-### Shared execution rail
-
-- Two horizontal rails enter one shared resource lane.
-- Before release: both rails stop at the barrier.
-- Failed state: both rails continue into one capacity slot and the collision node turns red.
-- Verified state: one rail continues and one stops with the label `seat unavailable`.
-- Motion is optional and respects reduced motion.
-
-### Verdict panel
-
-- Invariant statement.
-- Terminal label: `VIOLATED`, `VERIFIED`, or `INFRASTRUCTURE ERROR`.
-- Actor-success count.
-- Persisted-claim count.
-- Final remaining capacity.
-- Stable reason code.
-- Scope sentence explaining what was observed.
-
-### Repair packet panel
-
-- Failed acceptance criterion.
-- Relevant backend boundary.
-- Redaction status.
-- Packet hash.
-- Action: `Copy local repair command`.
-- The public UI never exposes an action that executes Codex.
+Floating white pill with soft shadow. Left: beak mark plus wordmark. Center: Product, How it works, Proof. Right: primary button Run a live test.
 
 ### Buttons
 
-- Primary actions use canary yellow with dark text.
-- Secondary actions use raised surface and white text.
-- Destructive actions are absent from the public V1.
-- Disabled controls explain why they are unavailable.
+- Primary: blue `#2E8BFF`, white text, radius 12px, soft blue shadow. Press `#1E7CF5`.
+- Secondary: soft gray `#E8E5DF`, ink text, radius 12px.
+- Every button is filled and performs a real action. No ghost or outline only buttons. Disabled buttons explain why.
+
+### Eyebrow pill
+
+Soft gray pill, mono uppercase label, used above headlines.
+
+### Feature card
+
+White card, radius 16px, soft shadow. A 40px colored icon tile at top, a small muted label, a bold title, and one line of plain copy.
+
+### Icon tile
+
+40px rounded square in purple, sky, or indigo, white glyph. Personality only, never status.
+
+### Proof card
+
+White card with a header row: run ID in mono plus a status pill. Body shows two actor tracks as rounded bars, an outcome pill per actor, and a small key value block with real counts. Before and after render side by side on desktop.
+
+### Actor track
+
+A rounded horizontal bar per actor with the actor name in mono and an outcome pill. Coral bar for a collision path, emerald bar for a correct win, neutral bar for a correct rejection.
+
+### Status pill
+
+Soft tinted pill with text. Amber for waiting, coral for collision, emerald for verified. Text is always present. No bare colored dots.
 
 ### Form fields
 
-- Labels remain visible above inputs.
-- Focus uses the pale-yellow focus token.
-- Error copy names the corrective action.
-- No placeholder-only labels.
+Labels above inputs, always visible. Focus uses a blue ring. Error copy names the corrective action. No placeholder only labels.
 
 ### Status language
 
-Use:
+Use: Preparing actors, Waiting at barrier, Actors released, Checking the promise, Collision found, Fix packet ready, Verified, Something went wrong.
 
-- Preparing actors
-- Waiting at barrier
-- Actors released
-- Evaluating invariant
-- Collision detected
-- Repair packet ready
-- Invariant verified
-- Infrastructure error
+Avoid: magic, smart, autonomous success, demo mode, mock result, AI powered insight.
 
-Avoid:
+## Screens
 
-- Magic
-- Smart
-- Autonomous success
-- Demo mode
-- Mock result
-- AI-powered insight
+Content and copy are fixed here. Visuals follow the component system above. Every screen uses real records from the live API. Loading, empty, and error states are designed and friendly, never a bare broken state.
 
-### Screen wireframe: landing `/`
+### Landing `/`
 
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ Collision Canary                                      View proof    │
-├──────────────────────────────────────────────────────────────────────┤
-│ EYEBROW: MULTI-ACTOR INVARIANT VERIFICATION                          │
-│                                                                      │
-│ Two users. One state.                                                │
-│ Find what breaks.                                                    │
-│                                                                      │
-│ Synchronized Kane browser journeys expose shared-state failures      │
-│ and keep the coding agent working until the invariant holds.         │
-│                                                                      │
-│ [Run the last-seat test]  [Inspect a proof run]                      │
-│                                                                      │
-│ ALICE ─────────────┐        FINAL SEAT                               │
-│                    ├──────> [ 1 remaining ]                          │
-│ BOB   ─────────────┘                                                  │
-├──────────────────────────────────────────────────────────────────────┤
-│ Sequentially green                         Shared-state violation     │
-│ Alice can claim. Bob can claim.             Both cannot claim one.    │
-├──────────────────────────────────────────────────────────────────────┤
-│ 1. Arm actors  2. Release together  3. Evaluate  4. Repair and rerun │
-├──────────────────────────────────────────────────────────────────────┤
-│ Real Kane browsers | Neon shared state | Codex repair packet         │
-└──────────────────────────────────────────────────────────────────────┘
-```
+Sections in order: nav pill, hero, runs on strip, problem, how it works, features, proof, final CTA, footer.
 
-Exact hero copy:
+- Eyebrow: MULTI USER BUG DETECTION
+- Headline: Catch the bug only two users can make.
+- Subcopy: Collision Canary drives two real browsers at the exact same moment, then proves whether your app keeps its promise: only one person can grab the last seat.
+- Primary action: Run the last-seat test, routes to `/run`.
+- Secondary action: See a real proof, routes to a real `/runs/[id]`.
+- Runs on strip: Kane, Neon, Vercel, Codex as monochrome wordmarks. Honest tooling, not fake customers.
+- Problem: Your tests pass. Your users still collide.
+- How it works: Arm, Release, Check, Repair, with colored tiles.
+- Features: Real browsers, Real database, Fix packet.
+- Proof: a real before and after from an actual run.
+- Final CTA: See it collide, then watch it get fixed.
 
-- Eyebrow: `MULTI-ACTOR INVARIANT VERIFICATION`
-- Headline: `Two users. One state. Find what breaks.`
-- Primary action: `Run the last-seat test`
-- Secondary action: `Inspect a proof run`
+### New Run `/run`
 
-### Screen wireframe: run creation `/run`
+- API: `POST /api/v1/runs` with scenario last-seat-v1 and invariant capacity-at-most-one-v1.
+- Copy: Start a paired run. The promise we test: at most one person can claim the final seat.
+- States: default, submitting, capacity busy (429), server error (500) with request id.
 
-```text
-┌───────────────┬──────────────────────────────────────────────────────┐
-│ New Run       │ NEW PAIRED RUN                                      │
-│ Runs          │                                                      │
-│ Lab           │ Scenario                                            │
-│ System        │ [Last-seat booking                         v]        │
-│               │                                                      │
-│               │ Invariant                                           │
-│               │ At most one actor can claim the final seat.          │
-│               │                                                      │
-│               │ Actors        Alice, Bob                             │
-│               │ Capacity      1                                      │
-│               │ Isolation     New resource per run                   │
-│               │                                                      │
-│               │ [Start paired run]                                   │
-└───────────────┴──────────────────────────────────────────────────────┘
-```
+### Actor Lab `/lab/last-seat#<token>`
 
-Empty state: no previous runs shows `No proof runs yet. Start with the last-seat invariant.`
+- API: arm, barrier poll, claim. Token arrives in the URL fragment and is sent as a bearer header from the client.
+- States: waiting at barrier X of 2, released, you won the seat, seat already taken, something went wrong.
 
-Error state: run creation failure shows a request ID and `The run was not created. Retry after the database connection is restored.`
+### Live Proof `/runs/[runId]`
 
-### Screen wireframe: actor lab `/lab/last-seat`
+- API: proof, evaluate, repair-packet.
+- Collision copy: winners, recorded claims, seats left, reason non_linearizable_outcome.
+- Verified copy: one win, one correct rejection, reason capacity_invariant_satisfied.
+- Fix packet: redaction status and sha256, a Copy repair command action. The site never runs Codex for the user.
 
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ LAST-SEAT BOOKING                       Actor: Alice                 │
-├──────────────────────────────────────────────────────────────────────┤
-│ Final seat                                                           │
-│ Capacity 1                         Remaining 1                        │
-│                                                                      │
-│ Alice and another browser actor will attempt this shared action.     │
-│                                                                      │
-│ [Arm claim]                                                          │
-│                                                                      │
-│ STATUS: WAITING FOR BOB                                               │
-│ Barrier arrivals 1 of 2                                               │
-└──────────────────────────────────────────────────────────────────────┘
-```
+### Before and After
 
-Terminal success: `Alice claimed the final seat.`
+- API: two proofs linked by a real repair cycle. Renders only when the cycle exists.
 
-Terminal rejection: `The final seat was already claimed.`
+### Runs `/runs`
 
-Infrastructure error: `The claim could not be verified. Run status remains incomplete.`
+- Needs a new `GET /api/v1/runs` list endpoint, or the nav item is cut for v1.
+- Friendly list with real run rows and a designed empty state.
 
-### Screen wireframe: live proof `/runs/[runId]`
+### System `/system`
 
-```text
-┌───────────────┬──────────────────────────────────────────────────────┐
-│ New Run       │ PROOF RUN run_7F2A                    [VIOLATED]     │
-│ Runs          │ At most one actor can claim the final seat.          │
-│ Lab           ├──────────────────────────────────────────────────────┤
-│ System        │ ALICE ─── armed ─── released ─── SUCCESS             │
-│               │ BOB   ─── armed ─── released ─── SUCCESS             │
-│               │                         ╲     ╱                       │
-│               │                         COLLISION                     │
-│               ├──────────────────────────────────────────────────────┤
-│               │ Actor successes       2                              │
-│               │ Persisted claims      2                              │
-│               │ Final remaining       0                              │
-│               │ Reason                non_linearizable_outcome       │
-│               ├──────────────────────────────────────────────────────┤
-│               │ Repair packet ready                                  │
-│               │ Redaction passed | Packet sha256: 64d2...            │
-│               │ [Copy local repair command]                           │
-└───────────────┴──────────────────────────────────────────────────────┘
-```
+- Database row backed by `GET /api/v1/health`.
+- Kane connection row needs a real check or is scoped out of v1.
 
-Verified rerun replaces the collision node with one continued rail and one stopped rail. The page states `One successful claim. One correct rejection. Shared state is consistent.`
-
-### Screen wireframe: proof comparison
-
-```text
-┌─────────────────────────────┬────────────────────────────────────────┐
-│ BEFORE REPAIR               │ AFTER REPAIR                           │
-│ VIOLATED                    │ VERIFIED                               │
-│ Alice success               │ Alice success                          │
-│ Bob success                 │ Bob rejected                           │
-│ 2 persisted claims          │ 1 persisted claim                      │
-│ non_linearizable_outcome    │ capacity_invariant_satisfied           │
-└─────────────────────────────┴────────────────────────────────────────┘
-```
-
-### Mobile-critical behavior
-
-- Show invariant and terminal verdict first.
-- Stack Alice, shared resource, and Bob in execution order.
-- Keep the primary action sticky only while the run is non-terminal.
-- Collapse raw evidence behind `Technical evidence`.
-- Never horizontally scroll the core verdict.
-
-### Empty, loading, and error states
-
-- Empty: mechanical canary sentinel watching two idle rails.
-- Loading: static rails with changing text labels. No infinite decorative loop.
-- Product failure: red collision stamp plus exact observed counts.
-- Infrastructure error: neutral border, yellow label, request ID, and retry action.
-- Verified: green stamp, exact counts, and linked before-run when available.
-
-## Do's and Don'ts
+## Do and Don't
 
 ### Do
 
-- Lead with the invariant and actor outcomes.
-- Keep the paired execution rail consistent across landing, product, and pitch.
-- Use real run IDs, timestamps, and counts.
-- Use canary yellow sparingly for attention and action.
-- Distinguish violation, rejection, and infrastructure error.
+- Lead with the promise and the real outcome.
+- Use real run IDs, timestamps, and counts everywhere.
+- Keep one blue for action and reserve amber, coral, and emerald for real status.
+- Design friendly empty, loading, and error states with a real next action.
 - Respect reduced motion and keyboard focus.
-- Preserve exact copy and labels in implementation.
 
 ### Don't
 
-- Add gradients, glass panels, glowing borders, or floating blobs.
-- Fill the product with generic cards and icons.
-- Use fake usage metrics, customers, testimonials, or activity.
-- Use green before the entire invariant is verified.
-- Put Codex execution behind a public button.
-- Present incomplete evidence as a product failure.
-- Use sponsor marks as unofficial seals.
-- Use a warm cartoon mascot as the primary visual.
+- No mock data, seeded numbers, or fabricated metrics, logos, or testimonials.
+- No placeholder text or gray placeholder image boxes.
+- No fake charts. Show real counts, tracks, and verdicts.
+- No ghost or outline only buttons.
+- No broken or empty screen as a default state.
+- No em dashes in copy.
+- Never put Codex execution behind a public button.
+- Never show green before a full verified pass.
 
-## Asset manifest
+## Assets and photography
 
-| Asset | Path | Status |
-|---|---|---|
-| Primary dark mark | `assets/brand/collision-canary-mark-dark.png` | Generate before scaffold |
-| Horizontal lockup | `assets/brand/collision-canary-lockup-dark.png` | Generate before scaffold |
-| Mechanical sentinel | `assets/brand/collision-canary-sentinel.png` | Generate before scaffold |
-| Architecture diagram | `assets/diagrams/architecture.png` | Render from canonical HTML |
-
-Generated brand assets remain local until MystiqueMide explicitly approves repository inclusion or publication.
+- Hero: a custom playful illustration of two browsers reaching one seat. Preferred over stock photo.
+- Optional human band: a real photo of engineers at laptops. Search query: software engineers collaborating laptop candid.
+- Optional problem story: a real last seat moment. Search query: airplane window seat, or concert tickets phone.
+- Photo treatment: radius 16px, soft shadow, slight warm tint.
+- Photos are sourced from Unsplash with a valid API key and bound at build with correct attribution. No placeholder images ship. Key location is pending from the owner.
 
 ## Build rules
 
-1. Implement one product surface at a time.
-2. Preserve approved copy, tokens, and state language.
-3. Use real backend records as soon as the backend exists.
-4. Verify every route after implementation.
-5. Keep provider, database, and invariant logic outside visual components.
-6. Build backend and orchestration before landing-page polish.
-7. Remove all starter-template copy before review.
+1. Build one section or one screen at a time. Do not build the whole page in one pass.
+2. Preserve already approved sections exactly. Do not modify sections above or below the current target.
+3. Every build step carries the global rules: cream canvas, one blue for action, real status colors only, soft shadows, no em dashes, no ghost buttons, no placeholders, no fake data.
+4. Use real backend records as soon as a route exists.
+5. Verify each route after implementation before moving on.
+6. Keep provider, database, and invariant logic out of visual components.
+7. Remove all starter template copy before review.

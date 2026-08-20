@@ -11,6 +11,7 @@ import {
   type ScenarioKey,
   resolvePublicBaseUrl,
 } from "@/modules/runs/create-run";
+import { listRuns } from "@/modules/runs/list-runs";
 
 type CreateRunBody = {
   scenarioKey?: unknown;
@@ -19,6 +20,30 @@ type CreateRunBody = {
 
 function isCreateRunBody(value: unknown): value is CreateRunBody {
   return typeof value === "object" && value !== null;
+}
+
+export async function GET(): Promise<Response> {
+  const requestId = createRequestId();
+
+  try {
+    const runs = await listRuns(50);
+    return jsonResponse(requestId, { runs });
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "run_list_failed",
+        requestId,
+        reason: error instanceof Error ? error.name : "unknown_error",
+      }),
+    );
+
+    return errorResponse(
+      requestId,
+      "run_list_failed",
+      "The verification runs could not be listed.",
+      500,
+    );
+  }
 }
 
 export async function POST(request: Request): Promise<Response> {
