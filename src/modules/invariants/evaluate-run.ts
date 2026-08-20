@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import {
@@ -144,8 +144,9 @@ async function loadRunState(
       .select()
       .from(repairCycles)
       .where(
-        and(
+        or(
           eq(repairCycles.failedRunId, runId),
+          eq(repairCycles.verifiedRunId, runId),
         ),
       )
       .limit(1)

@@ -13,10 +13,12 @@
     "test:actor-guards": "tsx scripts/verify-actor-guards.ts",
     "test:atomic-claims": "tsx scripts/verify-atomic-claims.ts",
     "test:invariant-evaluator": "tsx scripts/verify-invariant-evaluator.ts",
+    "test:repair-cycle": "tsx scripts/verify-repair-cycle.ts",
     "test:public-base-url": "tsx scripts/verify-public-base-url.ts",
     "test:backend-http": "tsx scripts/verify-backend-http.ts",
     "build:repair-packet": "tsx scripts/build-repair-packet.ts",
-    "repair:codex": "tsx scripts/repair-with-codex.ts"
+    "repair:codex": "tsx scripts/repair-with-codex.ts",
+    "link:repair-cycle": "tsx scripts/link-repair-cycle.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

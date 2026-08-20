@@ -60,6 +60,7 @@ pnpm test:public-base-url
 pnpm test:actor-guards
 pnpm test:atomic-claims
 pnpm test:invariant-evaluator
+pnpm test:repair-cycle
 ```
 
 The local failure fixture is deliberately disabled in production. To capture the controlled failure used by the repair flow, run the local server with:
@@ -77,6 +78,7 @@ Build a packet from a violated run:
 ```bash
 pnpm build:repair-packet -- --run <violated-run-id> --out .collision-canary/runs/<run-id>
 pnpm repair:codex -- --packet .collision-canary/runs/<run-id>/repair-packet.json
+pnpm link:repair-cycle -- --failed-run <violated-run-id> --verified-run <verified-run-id> --packet .collision-canary/runs/<run-id>/repair-packet.json
 ```
 
 The Codex adapter defaults to dry-run. `--apply` is an explicit local operation, restricted to the backend files named by the packet. It never commits or pushes.

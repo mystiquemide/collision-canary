@@ -32,6 +32,7 @@ local script and is not imported by the web runtime.
 | Evaluator | Cross-checks actor states, claim attempts, and final resource state. |
 | Proof projection | Returns reviewer-safe state without tokens or raw request data. |
 | Repair packet | Converts one violated proof into a hashed, allowlisted backend task. |
+| Repair cycle linker | Connects a failed proof to a satisfied rerun after packet validation. |
 
 ## State model
 
@@ -73,6 +74,10 @@ each successful decrement.
    shared resource, inserts one attempt, and writes the final actor outcome.
 6. Evaluation stores a verdict. A proof request returns the redacted persisted
    projection.
+
+The local repair-cycle linker validates the failed and verified terminal proofs,
+checks the packet digest, and records one cycle linking both runs. It updates
+both run projections without allowing a cycle to be relinked to different data.
 
 ## Claim atomicity
 
@@ -157,6 +162,7 @@ pnpm test:public-base-url
 pnpm test:actor-guards
 pnpm test:atomic-claims
 pnpm test:invariant-evaluator
+pnpm test:repair-cycle
 COLLISION_CANARY_BASE_URL=http://127.0.0.1:3001 pnpm test:backend-http
 ```
 
