@@ -40,3 +40,9 @@ Before each push:
 - Confirm no `.env` files, credentials, local evidence, internal planning files, scratch files, or generated concepts are tracked.
 - Confirm the commit author is `MystiqueMide <splashmediahub@gmail.com>`.
 - Push only the focused checkpoint commit and its required ancestry.
+
+## Frontend Approval Gate
+
+Backend and verification work may continue through the backend checkpoint. When
+frontend work is reached, stop. Do not modify, build, redesign, or continue
+frontend work until MystiqueMide gives explicit approval.
