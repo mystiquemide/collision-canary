@@ -4,19 +4,20 @@
   --canvas: #f3efe8;
   --card: #ffffff;
   --ink: #272c34;
-  --muted: #6e7582;
-  --primary: #2e8bff;
-  --primary-press: #1e7cf5;
+  --muted: #5c6470;
+  --primary: #1668d8;
+  --primary-press: #1258c0;
   --secondary: #e8e5df;
   --border: #e7e3db;
   --accent-purple: #a855f7;
   --accent-sky: #38bdf8;
   --accent-indigo: #6366f1;
   --waiting: #f5b93b;
-  --collision: #f0563a;
-  --verified: #1fb981;
+  --amber-strong: #8a6100;
+  --collision: #c0392b;
+  --verified: #0e7050;
   --dot: #dbd6cc;
-  --focus: #2e8bff;
+  --focus: #1668d8;
 }
 
 @theme inline {
@@ -32,6 +33,7 @@
   --color-accent-sky: var(--accent-sky);
   --color-accent-indigo: var(--accent-indigo);
   --color-waiting: var(--waiting);
+  --color-amber-strong: var(--amber-strong);
   --color-collision: var(--collision);
   --color-verified: var(--verified);
   --color-dot: var(--dot);

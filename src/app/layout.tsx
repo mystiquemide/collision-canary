@@ -13,8 +13,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://collision-canary.vercel.app"),
   title: "Collision Canary",
-  description: "Multi-actor invariant verification for agent-built web applications.",
+  description:
+    "Two real browsers, one last seat. Collision Canary proves only one user can win.",
+  openGraph: {
+    title: "Collision Canary",
+    description:
+      "Two real browsers, one last seat. Collision Canary proves only one user can win.",
+    url: "https://collision-canary.vercel.app",
+    siteName: "Collision Canary",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Collision Canary",
+    description:
+      "Two real browsers, one last seat. Collision Canary proves only one user can win.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

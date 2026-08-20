@@ -187,7 +187,7 @@ export function ActorLab() {
 
           {phase === "waiting" ? (
             <div>
-              <p className="font-mono text-sm font-semibold uppercase tracking-[0.05em] text-waiting">
+              <p className="font-mono text-sm font-semibold uppercase tracking-[0.05em] text-amber-strong">
                 Waiting for the other browser
               </p>
               {arrived ? (

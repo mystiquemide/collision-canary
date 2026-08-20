@@ -147,7 +147,7 @@ export default async function ProofPage({
               </dl>
             ) : (
               <div className="mt-4 border-t border-border pt-4">
-                <p className="font-mono text-sm font-semibold uppercase tracking-[0.05em] text-waiting">
+                <p className="font-mono text-sm font-semibold uppercase tracking-[0.05em] text-amber-strong">
                   Run in progress
                 </p>
                 <p className="mt-1 font-mono text-xs text-muted">

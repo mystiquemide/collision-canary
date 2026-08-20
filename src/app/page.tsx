@@ -24,12 +24,12 @@ export default async function Home() {
   return (
     <main className="mx-auto w-full max-w-[1100px] px-4">
       {/* Nav */}
-      <nav className="mt-5 flex items-center gap-4 rounded-2xl border border-border bg-card px-3 py-2.5 shadow-[0_8px_22px_rgba(30,40,60,0.07)]">
+      <nav className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-3 py-2.5 shadow-[0_8px_22px_rgba(30,40,60,0.07)]">
         <span className="flex items-center gap-2 font-extrabold tracking-tight text-ink">
           <BeakMark />
           Collision Canary
         </span>
-        <div className="ml-2 hidden gap-4 sm:flex">
+        <div className="ml-2 flex gap-4">
           <a href="#how-it-works" className="text-sm text-ink/90 hover:text-ink">
             How it works
           </a>
@@ -81,7 +81,7 @@ export default async function Home() {
               Final seat
             </div>
             <div className="text-2xl font-extrabold text-ink">1</div>
-            <div className="text-xs font-bold text-waiting">1 left</div>
+            <div className="text-xs font-bold text-amber-strong">1 left</div>
           </div>
           <BrowserCard name="Bob" tilt="3deg" />
         </div>
