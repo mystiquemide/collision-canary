@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Next.js type definitions
+        run: pnpm exec next typegen
+
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
