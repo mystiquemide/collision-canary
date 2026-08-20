@@ -1,20 +1,53 @@
 # Collision Canary
 
-Collision Canary makes two real browser actors share one state, then checks whether the result satisfies a declared business invariant.
+**Catch the bug only two users can make.**
 
-The first scenario is a last-seat booking flow:
+Collision Canary drives two real browser actors at the exact same moment and proves whether your app keeps a simple promise: only one person can claim the last seat. Single-user tests never see this class of bug. It only shows up when two people act on one shared record in the same instant, and one row says yes to both.
+
+**Live app: https://collision-canary.vercel.app**
+
+![Collision Canary architecture](assets/diagrams/architecture.png)
+
+## Try it in about a minute
+
+1. Open the [live app](https://collision-canary.vercel.app) and click **Run the last-seat test**.
+2. You receive two tokenized actor links, one for Alice and one for Bob.
+3. Point **Kane CLI** at both links to drive two real Chrome browsers, or open each link in its own browser.
+4. Both actors arm, wait at a shared barrier, and claim at the same moment.
+5. Open the proof. A healthy app shows one winner and one correct rejection. A broken one shows two winners and produces a repair packet.
+
+## How it works
 
 1. Alice and Bob arm against one shared seat.
-2. A database barrier releases both actors.
-3. The claim path produces a persisted outcome for each actor.
-4. The evaluator classifies the observed state as satisfied or violated.
-5. A violated run produces a redacted repair packet for a local Codex repair.
+2. A database barrier releases both actors together.
+3. Each actor runs the claim path, which writes a persisted outcome.
+4. The evaluator classifies the observed state as satisfied or violated against a declared invariant: at most one actor can claim the seat.
+5. A violated run produces a redacted repair packet for a local Codex repair. You re-run and prove the fix.
 
-## Current backend surface
+## Kane CLI
+
+The actor lab at `/lab/last-seat` is a real browser surface built to be driven by Kane CLI. Each run hands out two tokenized actor URLs. Kane opens them as two independent Chrome sessions and performs the arm and claim steps, so the collision is produced by real browsers against real shared state, not by request mocks. The same lab works if you open the two links by hand.
+
+## What makes it real
+
+- **Real browsers**, driven by Kane, not scripted request mocks.
+- **Real shared state**: one Neon Postgres row and a real transaction decide the winner.
+- **Evidence-bound repair**: a redacted, hashed packet your coding agent can act on, followed by a verified re-run.
+
+## Proof, not promises
+
+Every run is a real database record. Browse recent runs at [/runs](https://collision-canary.vercel.app/runs) and open any proof to see the real counts, the verdict, and the reason code.
+
+## Tech
+
+Next.js 16 (App Router) with React 19, Tailwind v4, Neon Postgres with Drizzle ORM, deployed on Vercel. Kane CLI drives the browser actors. Codex performs local, evidence-bound repairs.
+
+## API surface
 
 | Route | Purpose |
 |---|---|
 | `GET /api/v1/health` | Database readiness |
+| `GET /api/v1/runs` | List recent runs |
 | `POST /api/v1/runs` | Create an isolated run |
 | `POST /api/v1/runs/:runId/actors/:actorKey/arm` | Arm one actor |
 | `GET /api/v1/runs/:runId/actors/:actorKey/barrier` | Read barrier state |
@@ -23,12 +56,9 @@ The first scenario is a last-seat booking flow:
 | `GET /api/v1/runs/:runId/proof` | Read the redacted proof projection |
 | `GET /api/v1/runs/:runId/repair-packet` | Read a violated-run repair packet |
 
-The browser surface is a separate client of these routes, so the proof path can
-also be verified directly over HTTP.
+## Run it locally
 
-## Setup
-
-Requirements: Node.js 22+, pnpm 11+, Vercel CLI, and PostgreSQL-compatible Neon credentials.
+Requirements: Node.js 22+, pnpm 11+, and Neon (PostgreSQL) credentials.
 
 ```bash
 pnpm install
@@ -37,11 +67,7 @@ pnpm db:migrate
 pnpm dev -- --port 3001
 ```
 
-The database schema is defined in [src/db/schema.ts](src/db/schema.ts) and migrations are stored in [drizzle](drizzle).
-
-## Verification
-
-With the development server running:
+Verify the full flow over HTTP:
 
 ```bash
 COLLISION_CANARY_BASE_URL=http://127.0.0.1:3001 pnpm test:backend-http
@@ -53,27 +79,11 @@ The same verifier can exercise the local failure fixture and repair packet:
 COLLISION_CANARY_FAILURE_FIXTURE=true COLLISION_CANARY_BASE_URL=http://127.0.0.1:3001 pnpm test:backend-http
 ```
 
-Focused backend checks:
-
-```bash
-pnpm test:public-base-url
-pnpm test:actor-guards
-pnpm test:atomic-claims
-pnpm test:invariant-evaluator
-pnpm test:repair-cycle
-```
-
-The local failure fixture is deliberately disabled in production. To capture the controlled failure used by the repair flow, run the local server with:
-
-```bash
-COLLISION_CANARY_FAILURE_FIXTURE=true pnpm dev -- --port 3001
-```
-
-The production claim path remains atomic even if the fixture variable is accidentally present.
+Focused checks: `pnpm test:actor-guards`, `pnpm test:atomic-claims`, `pnpm test:invariant-evaluator`, `pnpm test:repair-cycle`, `pnpm test:public-base-url`.
 
 ## Repair flow
 
-Build a packet from a violated run:
+Build a packet from a violated run, apply a local Codex repair, then link the cycle:
 
 ```bash
 pnpm build:repair-packet -- --run <violated-run-id> --out .collision-canary/runs/<run-id>
@@ -81,13 +91,7 @@ pnpm repair:codex -- --packet .collision-canary/runs/<run-id>/repair-packet.json
 pnpm link:repair-cycle -- --failed-run <violated-run-id> --verified-run <verified-run-id> --packet .collision-canary/runs/<run-id>/repair-packet.json
 ```
 
-The Codex adapter defaults to dry-run. `--apply` is an explicit local operation, restricted to the backend files named by the packet. It never commits or pushes.
-
-## Architecture
-
-![Collision Canary architecture](assets/diagrams/architecture.png)
-
-Read the system decisions and trust boundaries in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The formal visual system is [docs/DESIGN.md](docs/DESIGN.md).
+The Codex adapter defaults to dry-run. `--apply` is an explicit local operation restricted to the backend files named by the packet. It never commits or pushes.
 
 ## Trust boundary
 
@@ -96,7 +100,12 @@ Read the system decisions and trust boundaries in [docs/ARCHITECTURE.md](docs/AR
 - Production actor URLs use `NEXT_PUBLIC_APP_URL` or Vercel's deployment URL, never an untrusted host header.
 - Proof projections exclude tokens, credentials, and raw request headers.
 - Codex execution is local-only and is never imported by a public route.
-- A proof describes one observed run. It does not claim exhaustive verification of every possible schedule.
+
+## Limitations
+
+A proof describes one observed run. It does not claim exhaustive verification of every possible schedule. The local failure fixture is disabled in production, and the production claim path stays atomic even if the fixture variable is present.
+
+Read the system decisions in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the visual system in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## License
 
