@@ -59,7 +59,7 @@ export default async function RunsPage() {
   return (
     <main className="mx-auto w-full max-w-[1200px] px-4 pb-16">
       <AppHeader active="runs" />
-      <section className="mx-auto mt-10 max-w-[820px]">
+      <section id="main" tabIndex={-1} className="mx-auto mt-10 max-w-[820px]">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-[clamp(1.6rem,4.5vw,2.2rem)] font-extrabold tracking-[-0.02em] text-ink">
             Runs

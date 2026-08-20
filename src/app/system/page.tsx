@@ -28,7 +28,7 @@ export default async function SystemPage() {
   return (
     <main className="mx-auto w-full max-w-[1200px] px-4 pb-16">
       <AppHeader active="system" />
-      <section className="mx-auto mt-10 max-w-[620px]">
+      <section id="main" tabIndex={-1} className="mx-auto mt-10 max-w-[620px]">
         <h1 className="mb-6 text-[clamp(1.6rem,4.5vw,2.2rem)] font-extrabold tracking-[-0.02em] text-ink">
           System
         </h1>

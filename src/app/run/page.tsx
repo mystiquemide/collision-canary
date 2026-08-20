@@ -11,7 +11,7 @@ export default function RunPage() {
   return (
     <main className="mx-auto w-full max-w-[1200px] px-4 pb-16">
       <AppHeader active="run" />
-      <section className="mx-auto mt-10 max-w-[640px]">
+      <section id="main" tabIndex={-1} className="mx-auto mt-10 max-w-[640px]">
         <h1 className="text-[clamp(1.6rem,4.5vw,2.2rem)] font-extrabold tracking-[-0.02em] text-ink">
           Start a paired run
         </h1>

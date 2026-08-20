@@ -98,7 +98,7 @@ export default async function ProofPage({
   return (
     <main className="mx-auto w-full max-w-[1200px] px-4 pb-16">
       <AppHeader active="runs" />
-      <section className="mx-auto mt-10 max-w-[620px]">
+      <section id="main" tabIndex={-1} className="mx-auto mt-10 max-w-[620px]">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_12px_32px_rgba(30,40,60,0.08)]">
           <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
             <span className="font-mono text-sm text-muted">{shortId}</span>

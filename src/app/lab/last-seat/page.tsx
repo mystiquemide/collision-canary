@@ -9,7 +9,11 @@ export const metadata: Metadata = {
 
 export default function LabPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[520px] flex-col items-center justify-center px-4 py-10">
+    <main
+      id="main"
+      tabIndex={-1}
+      className="mx-auto flex min-h-screen w-full max-w-[520px] flex-col items-center justify-center px-4 py-10"
+    >
       <Link
         href="/"
         className="mb-6 flex items-center gap-2 font-extrabold tracking-tight text-ink"

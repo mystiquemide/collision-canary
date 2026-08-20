@@ -46,7 +46,7 @@ export default async function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="px-2 pb-8 pt-12 text-center">
+      <section id="main" tabIndex={-1} className="px-2 pb-8 pt-12 text-center">
         <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-1.5 font-mono text-[0.64rem] uppercase tracking-[0.08em] text-muted">
           Multi user bug detection
         </span>
