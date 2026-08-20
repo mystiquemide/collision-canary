@@ -87,6 +87,7 @@ async function main(): Promise<void> {
 
   const failedRunId = await createTerminalRun(db, schema, true);
   const verifiedRunId = await createTerminalRun(db, schema, false);
+  const otherVerifiedRunId = await createTerminalRun(db, schema, false);
 
   try {
     const failedProof = await evaluator.evaluateRun(failedRunId);
@@ -117,6 +118,21 @@ async function main(): Promise<void> {
     assert.equal(linkedFailed?.repairCycle?.id, linked.id);
     assert.equal(linkedVerified?.repairCycle?.id, linked.id);
 
+    await evaluator.evaluateRun(otherVerifiedRunId);
+    await assert.rejects(
+      () =>
+        linker.linkRepairCycle({
+          failedRunId,
+          verifiedRunId: otherVerifiedRunId,
+          packetSha256: packet.packetSha256,
+        }),
+      (error: unknown) =>
+        error instanceof linker.RepairCycleLinkError &&
+        error.code === "repair_cycle_invalid",
+    );
+    const unlinkedOtherRun = await evaluator.getRunProof(otherVerifiedRunId);
+    assert.equal(unlinkedOtherRun?.repairCycle, null);
+
     await assert.rejects(
       () =>
         linker.linkRepairCycle({
@@ -143,7 +159,13 @@ async function main(): Promise<void> {
       .where(eq(schema.repairCycles.failedRunId, failedRunId));
     await db
       .delete(schema.verificationRuns)
-      .where(inArray(schema.verificationRuns.id, [failedRunId, verifiedRunId]));
+      .where(
+        inArray(schema.verificationRuns.id, [
+          failedRunId,
+          verifiedRunId,
+          otherVerifiedRunId,
+        ]),
+      );
   }
 }
 

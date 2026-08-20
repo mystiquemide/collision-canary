@@ -143,6 +143,13 @@ export async function linkRepairCycle({
       )
       WHERE id IN (${failedRunId}::uuid, ${verifiedRunId}::uuid)
         AND repair_cycle_id IS NULL
+        AND EXISTS (
+          SELECT 1
+          FROM repair_cycles
+          WHERE failed_run_id = ${failedRunId}::uuid
+            AND verified_run_id = ${verifiedRunId}::uuid
+            AND packet_sha256 = ${packetSha256}
+        )
     `,
   ]);
 
