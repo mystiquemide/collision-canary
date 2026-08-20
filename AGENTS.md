@@ -27,3 +27,16 @@ For every public repo:
 - Before committing, review the repository from an external user's or judge's perspective and remove anything that makes it look like an internal workspace, review artifact, or unfinished agent session.
 
 Default rule: if a file or piece of documentation exists only for our internal workflow and is not needed by users, contributors, deployment, testing, or judging, it must stay out of the public repository.
+
+## Checkpoint Push Rule
+
+After every meaningful implementation checkpoint, commit the focused change with a short unique message and push `main` to GitHub.
+
+Meaningful checkpoints include approved planning phases, database migrations, API endpoints, state guards, barriers, verification flows, repair logic, QA fixes, and submission-ready documentation.
+
+Before each push:
+
+- Confirm the tracked tree is clean except for the intended checkpoint.
+- Confirm no `.env` files, credentials, local evidence, internal planning files, scratch files, or generated concepts are tracked.
+- Confirm the commit author is `MystiqueMide <splashmediahub@gmail.com>`.
+- Push only the focused checkpoint commit and its required ancestry.
