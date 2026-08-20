@@ -3,7 +3,12 @@ import {
   errorResponse,
   jsonResponse,
 } from "@/lib/http/json";
-import { createVerificationRun, SCENARIOS, type ScenarioKey } from "@/modules/runs/create-run";
+import {
+  createVerificationRun,
+  RunCreationCapacityError,
+  SCENARIOS,
+  type ScenarioKey,
+} from "@/modules/runs/create-run";
 
 type CreateRunBody = {
   scenarioKey?: unknown;
@@ -62,6 +67,10 @@ export async function POST(request: Request): Promise<Response> {
 
     return jsonResponse(requestId, data, 201);
   } catch (error) {
+    if (error instanceof RunCreationCapacityError) {
+      return errorResponse(requestId, error.code, error.message, 429);
+    }
+
     console.error(
       JSON.stringify({
         event: "run_creation_failed",

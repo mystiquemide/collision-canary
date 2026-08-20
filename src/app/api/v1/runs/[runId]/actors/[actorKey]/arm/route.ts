@@ -41,11 +41,30 @@ export async function POST(
     throw error;
   }
 
-  const [actor] = await db
-    .select({ id: runActors.id })
-    .from(runActors)
-    .where(and(eq(runActors.runId, runId), eq(runActors.actorKey, actorKey)))
-    .limit(1);
+  let actor: { id: string } | undefined;
+
+  try {
+    [actor] = await db
+      .select({ id: runActors.id })
+      .from(runActors)
+      .where(and(eq(runActors.runId, runId), eq(runActors.actorKey, actorKey)))
+      .limit(1);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "actor_lookup_failed",
+        requestId,
+        reason: error instanceof Error ? error.name : "unknown_error",
+      }),
+    );
+
+    return errorResponse(
+      requestId,
+      "actor_lookup_failed",
+      "The actor could not be loaded.",
+      503,
+    );
+  }
 
   if (!actor) {
     return errorResponse(

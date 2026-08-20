@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 
+import { count, gt, sql } from "drizzle-orm";
+
 import { db } from "@/db/client";
 import {
   runActors,
@@ -22,6 +24,15 @@ export const SCENARIOS = {
 
 export type ScenarioKey = keyof typeof SCENARIOS;
 
+export class RunCreationCapacityError extends Error {
+  readonly code = "run_capacity_reached" as const;
+
+  constructor() {
+    super("The run creation limit has been reached. Try again later.");
+    this.name = "RunCreationCapacityError";
+  }
+}
+
 type CreateRunInput = {
   scenarioKey: ScenarioKey;
   baseUrl: string;
@@ -31,6 +42,20 @@ export async function createVerificationRun({
   scenarioKey,
   baseUrl,
 }: CreateRunInput) {
+  const [recentRuns] = await db
+    .select({ count: count() })
+    .from(verificationRuns)
+    .where(
+      gt(
+        verificationRuns.createdAt,
+        sql`now() - interval '1 hour'`,
+      ),
+    );
+
+  if (Number(recentRuns?.count ?? 0) >= 100) {
+    throw new RunCreationCapacityError();
+  }
+
   const scenario = SCENARIOS[scenarioKey];
   const runId = randomUUID();
   const resourceId = randomUUID();
