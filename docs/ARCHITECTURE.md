@@ -28,7 +28,7 @@ local script and is not imported by the web runtime.
 | Run service | Creates a run, one shared resource, two actors, and a barrier. |
 | Token service | Signs short-lived HMAC actor tokens scoped to one run and actor. |
 | Barrier service | Records one arrival per actor and releases both actors at the expected count. |
-| Claim service | Performs the conditional resource update and records the actor outcome in one SQL statement. |
+| Claim service | Serializes the actor transition, then performs the conditional resource update and records the outcome in one transaction. |
 | Evaluator | Cross-checks actor states, claim attempts, and final resource state. |
 | Proof projection | Returns reviewer-safe state without tokens or raw request data. |
 | Repair packet | Converts one violated proof into a hashed, allowlisted backend task. |
@@ -76,7 +76,9 @@ each successful decrement.
 
 ## Claim atomicity
 
-The production path uses one parameterized SQL statement:
+The production path uses one short Neon transaction. It first changes the
+released actor to `claiming`, then runs this parameterized resource and outcome
+statement:
 
 ```sql
 UPDATE scenario_resources
