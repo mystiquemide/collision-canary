@@ -1,15 +1,15 @@
 import { randomUUID } from "node:crypto";
 
-import { count, gt, sql } from "drizzle-orm";
-
-import { db } from "@/db/client";
-import {
-  runActors,
-  runBarriers,
-  scenarioResources,
-  verificationRuns,
-} from "@/db/schema";
+import { neon } from "@neondatabase/serverless";
 import { createActorToken } from "@/lib/security/actor-token";
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required for run creation.");
+}
+
+const sqlClient = neon(databaseUrl);
 
 export const SCENARIOS = {
   "last-seat-v1": {
@@ -87,20 +87,6 @@ export async function createVerificationRun({
   scenarioKey,
   baseUrl,
 }: CreateRunInput) {
-  const [recentRuns] = await db
-    .select({ count: count() })
-    .from(verificationRuns)
-    .where(
-      gt(
-        verificationRuns.createdAt,
-        sql`now() - interval '1 hour'`,
-      ),
-    );
-
-  if (Number(recentRuns?.count ?? 0) >= 100) {
-    throw new RunCreationCapacityError();
-  }
-
   const scenario = SCENARIOS[scenarioKey];
   const runId = randomUUID();
   const resourceId = randomUUID();
@@ -108,32 +94,76 @@ export async function createVerificationRun({
   const createdAt = new Date();
   const expiresAt = createdAt.getTime() + 60 * 60 * 1000;
 
-  const actorRows = scenario.actors.map((actor, index) => ({
-    id: actorIds[index]!,
-    runId,
-    actorKey: actor.actorKey,
-    displayName: actor.displayName,
-  }));
+  const [, insertedRuns] = await sqlClient.transaction([
+    sqlClient`
+      SELECT pg_advisory_xact_lock(
+        hashtextextended('collision-canary:run-creation', 0)
+      )
+    `,
+    sqlClient`
+      INSERT INTO verification_runs (
+        id,
+        scenario_key,
+        invariant_key,
+        created_at
+      )
+      SELECT
+        ${runId}::uuid,
+        ${scenarioKey},
+        ${scenario.invariantKey},
+        ${createdAt}
+      WHERE (
+        SELECT count(*)
+        FROM verification_runs
+        WHERE created_at > now() - interval '1 hour'
+      ) < 100
+      RETURNING id
+    `,
+    sqlClient`
+      INSERT INTO scenario_resources (id, run_id, capacity, remaining)
+      SELECT
+        ${resourceId}::uuid,
+        ${runId}::uuid,
+        ${scenario.capacity},
+        ${scenario.capacity}
+      WHERE EXISTS (
+        SELECT 1 FROM verification_runs WHERE id = ${runId}::uuid
+      )
+    `,
+    sqlClient`
+      INSERT INTO run_actors (id, run_id, actor_key, display_name)
+      SELECT
+        ${actorIds[0]}::uuid,
+        ${runId}::uuid,
+        ${scenario.actors[0]!.actorKey},
+        ${scenario.actors[0]!.displayName}
+      WHERE EXISTS (
+        SELECT 1 FROM verification_runs WHERE id = ${runId}::uuid
+      )
+    `,
+    sqlClient`
+      INSERT INTO run_actors (id, run_id, actor_key, display_name)
+      SELECT
+        ${actorIds[1]}::uuid,
+        ${runId}::uuid,
+        ${scenario.actors[1]!.actorKey},
+        ${scenario.actors[1]!.displayName}
+      WHERE EXISTS (
+        SELECT 1 FROM verification_runs WHERE id = ${runId}::uuid
+      )
+    `,
+    sqlClient`
+      INSERT INTO run_barriers (run_id, expected_count)
+      SELECT ${runId}::uuid, ${scenario.actors.length}
+      WHERE EXISTS (
+        SELECT 1 FROM verification_runs WHERE id = ${runId}::uuid
+      )
+    `,
+  ]);
 
-  await db.batch([
-    db.insert(verificationRuns).values({
-      id: runId,
-      scenarioKey,
-      invariantKey: scenario.invariantKey,
-      createdAt,
-    }),
-    db.insert(scenarioResources).values({
-      id: resourceId,
-      runId,
-      capacity: scenario.capacity,
-      remaining: scenario.capacity,
-    }),
-    db.insert(runActors).values(actorRows),
-    db.insert(runBarriers).values({
-      runId,
-      expectedCount: scenario.actors.length,
-    }),
-  ] as const);
+  if ((insertedRuns as unknown[]).length === 0) {
+    throw new RunCreationCapacityError();
+  }
 
   const actors = scenario.actors.map((actor) => {
     const actorUrl = new URL("/lab/last-seat", baseUrl);

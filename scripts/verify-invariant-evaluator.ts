@@ -86,6 +86,7 @@ async function main(): Promise<void> {
 
   const violatedRunId = await createFixture(db, schema, true);
   const satisfiedRunId = await createFixture(db, schema, false);
+  const concurrentRunId = await createFixture(db, schema, false);
 
   try {
     const violated = await evaluator.evaluateRun(violatedRunId);
@@ -112,15 +113,39 @@ async function main(): Promise<void> {
     assert.equal(satisfied?.evaluation?.reasonCode, "capacity_invariant_satisfied");
     assert.equal(satisfied?.evaluation?.successfulClaims, 1);
 
+    const [firstEvaluation, secondEvaluation] = await Promise.all([
+      evaluator.evaluateRun(concurrentRunId),
+      evaluator.evaluateRun(concurrentRunId),
+    ]);
+    assert.equal(firstEvaluation?.evaluation?.verdict, "satisfied");
+    assert.equal(secondEvaluation?.evaluation?.verdict, "satisfied");
+    assert.equal(firstEvaluation?.run.status, "verified");
+    assert.equal(secondEvaluation?.run.status, "verified");
+
+    const evaluations = await db
+      .select({ id: schema.invariantEvaluations.id })
+      .from(schema.invariantEvaluations)
+      .where(eq(schema.invariantEvaluations.runId, concurrentRunId));
+    assert.equal(evaluations.length, 1);
+
     const reread = await evaluator.getRunProof(satisfiedRunId);
     assert.equal(reread?.evaluation?.verdict, "satisfied");
     assert.equal(reread?.actors.some((actor) => "token" in actor), false);
+    assert.deepEqual(
+      reread?.actors.map((actor) => actor.actorKey),
+      ["alice", "bob"],
+    );
+    assert.deepEqual(
+      reread?.attempts.map((attempt) => attempt.actorKey),
+      ["alice", "bob"],
+    );
 
     console.log(
       JSON.stringify({
         status: "passed",
         violated: violated?.evaluation,
         satisfied: satisfied?.evaluation,
+        concurrentEvaluationRows: evaluations.length,
         proofRedacted: true,
       }),
     );
@@ -131,6 +156,9 @@ async function main(): Promise<void> {
     await db
       .delete(schema.verificationRuns)
       .where(eq(schema.verificationRuns.id, satisfiedRunId));
+    await db
+      .delete(schema.verificationRuns)
+      .where(eq(schema.verificationRuns.id, concurrentRunId));
   }
 }
 

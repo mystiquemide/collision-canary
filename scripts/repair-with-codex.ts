@@ -31,39 +31,47 @@ type RepositoryState = {
   files: Map<string, string>;
 };
 
-function statusPaths(status: string): string[] {
-  return status
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => {
-      const path = line.slice(3).trim();
-      const renameSeparator = path.lastIndexOf(" -> ");
-      return renameSeparator >= 0
-        ? path.slice(renameSeparator + " -> ".length)
-        : path;
-    });
-}
-
 function fileDigest(content: Buffer): string {
   return createHash("sha256").update(content).digest("hex");
+}
+
+const SNAPSHOT_EXCLUDED_PREFIXES = [
+  ".collision-canary/",
+  ".next/",
+  ".vercel/",
+  "node_modules/",
+];
+
+const SNAPSHOT_EXCLUDED_GIT_PATHS = SNAPSHOT_EXCLUDED_PREFIXES.map(
+  (prefix) => `:(exclude)${prefix}**`,
+);
+
+function shouldSnapshot(path: string): boolean {
+  return !SNAPSHOT_EXCLUDED_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+async function gitFiles(args: string[]): Promise<string[]> {
+  const { stdout } = await execFile("git", ["ls-files", "-z", ...args], {
+    cwd: process.cwd(),
+  });
+  return stdout.split("\0").filter(Boolean).filter(shouldSnapshot);
 }
 
 async function repositoryState(): Promise<RepositoryState> {
   const { stdout: head } = await execFile("git", ["rev-parse", "HEAD"], {
     cwd: process.cwd(),
   });
-  const { stdout: tracked } = await execFile("git", ["ls-files", "-z"], {
-    cwd: process.cwd(),
-  });
-  const { stdout: status } = await execFile(
-    "git",
-    ["status", "--porcelain=v1", "--untracked-files=all"],
-    { cwd: process.cwd() },
-  );
 
   const paths = new Set([
-    ...tracked.split("\0").filter(Boolean),
-    ...statusPaths(status),
+    ...(await gitFiles([])),
+    ...(await gitFiles(["--others", "--exclude-standard"])),
+    ...(await gitFiles([
+      "--others",
+      "--ignored",
+      "--exclude-standard",
+      "--",
+      ...SNAPSHOT_EXCLUDED_GIT_PATHS,
+    ])),
   ]);
   const files = new Map<string, string>();
 

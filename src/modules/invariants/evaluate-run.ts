@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import {
@@ -38,6 +38,8 @@ type RunState = {
   evaluation: typeof invariantEvaluations.$inferSelect | null;
   repairCycle: typeof repairCycles.$inferSelect | null;
 };
+
+type QueryClient = Pick<typeof db, "select">;
 
 export type RunProof = {
   run: {
@@ -107,8 +109,11 @@ function invariantStatement(invariantKey: string): string {
   return "The declared invariant must hold for the observed run.";
 }
 
-async function loadRunState(runId: string): Promise<RunState | null> {
-  const [run] = await db
+async function loadRunState(
+  runId: string,
+  database: QueryClient = db,
+): Promise<RunState | null> {
+  const [run] = await database
     .select()
     .from(verificationRuns)
     .where(eq(verificationRuns.id, runId))
@@ -117,25 +122,25 @@ async function loadRunState(runId: string): Promise<RunState | null> {
   if (!run) return null;
 
   const [resource, barriers, evaluation, repairCycle] = await Promise.all([
-    db
+    database
       .select()
       .from(scenarioResources)
       .where(eq(scenarioResources.runId, runId))
       .limit(1)
       .then(([row]) => row ?? null),
-    db
+    database
       .select()
       .from(runBarriers)
       .where(eq(runBarriers.runId, runId))
       .limit(1)
       .then(([row]) => row ?? null),
-    db
+    database
       .select()
       .from(invariantEvaluations)
       .where(eq(invariantEvaluations.runId, runId))
       .limit(1)
       .then(([row]) => row ?? null),
-    db
+    database
       .select()
       .from(repairCycles)
       .where(
@@ -147,14 +152,29 @@ async function loadRunState(runId: string): Promise<RunState | null> {
       .then(([row]) => row ?? null),
   ]);
 
-  const actors = await db
+  const actors = await database
     .select()
     .from(runActors)
-    .where(eq(runActors.runId, runId));
-  const attempts = await db
-    .select()
+    .where(eq(runActors.runId, runId))
+    .orderBy(asc(runActors.actorKey));
+  const attempts = await database
+    .select({
+      id: claimAttempts.id,
+      runId: claimAttempts.runId,
+      actorId: claimAttempts.actorId,
+      resourceId: claimAttempts.resourceId,
+      result: claimAttempts.result,
+      observedRemaining: claimAttempts.observedRemaining,
+      createdAt: claimAttempts.createdAt,
+    })
     .from(claimAttempts)
-    .where(eq(claimAttempts.runId, runId));
+    .innerJoin(runActors, eq(runActors.id, claimAttempts.actorId))
+    .where(eq(claimAttempts.runId, runId))
+    .orderBy(
+      asc(runActors.actorKey),
+      asc(claimAttempts.createdAt),
+      asc(claimAttempts.id),
+    );
 
   return { run, resource, actors, barriers, attempts, evaluation, repairCycle };
 }
@@ -240,7 +260,7 @@ function calculateEvaluation(state: RunState): {
   const persistedClaims = state.attempts.filter(
     (attempt) => attempt.result === "succeeded",
   ).length;
-  const finalRemaining = state.resource?.remaining ?? -1;
+  const finalRemaining = state.resource?.remaining ?? 0;
 
   if (state.run.invariantKey !== "capacity-at-most-one-v1") {
     return {
@@ -318,10 +338,35 @@ function calculateEvaluation(state: RunState): {
   };
 }
 
-function runStatusForVerdict(verdict: EvaluationVerdict): RunStatus {
-  if (verdict === "violated") return "failed";
-  if (verdict === "satisfied") return "verified";
-  return "infra_error";
+function synchronizeRunStatus(runId: string) {
+  return db
+    .update(verificationRuns)
+    .set({
+      status: sql`
+        CASE (
+          SELECT verdict
+          FROM invariant_evaluations
+          WHERE run_id = ${runId}::uuid
+        )
+          WHEN 'violated'::invariant_verdict THEN 'failed'::verification_run_status
+          WHEN 'satisfied'::invariant_verdict THEN 'verified'::verification_run_status
+          ELSE 'infra_error'::verification_run_status
+        END
+      `,
+      completedAt: sql`
+        (
+          SELECT evaluated_at
+          FROM invariant_evaluations
+          WHERE run_id = ${runId}::uuid
+        )
+      `,
+    })
+    .where(
+      and(
+        eq(verificationRuns.id, runId),
+        isNull(verificationRuns.completedAt),
+      ),
+    );
 }
 
 export async function getRunProof(runId: string): Promise<RunProof | null> {
@@ -332,7 +377,10 @@ export async function getRunProof(runId: string): Promise<RunProof | null> {
 export async function evaluateRun(runId: string): Promise<RunProof | null> {
   const state = await loadRunState(runId);
   if (!state) return null;
-  if (state.evaluation) return toProof(state);
+  if (state.evaluation) {
+    await synchronizeRunStatus(runId);
+    return getRunProof(runId);
+  }
 
   const calculated = calculateEvaluation(state);
   const evaluatedAt = new Date();
@@ -352,13 +400,7 @@ export async function evaluateRun(runId: string): Promise<RunProof | null> {
         evaluatedAt,
       })
       .onConflictDoNothing({ target: invariantEvaluations.runId }),
-    db
-      .update(verificationRuns)
-      .set({
-        status: runStatusForVerdict(calculated.verdict),
-        completedAt: evaluatedAt,
-      })
-      .where(eq(verificationRuns.id, runId)),
+    synchronizeRunStatus(runId),
   ] as const);
 
   return getRunProof(runId);
