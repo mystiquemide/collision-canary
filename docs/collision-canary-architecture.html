@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collision Canary Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      padding: 32px;
+      color: #f3f5f7;
+      background: #090b0f;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .page { max-width: 1320px; margin: 0 auto; }
+    .header { margin-bottom: 22px; }
+    .eyebrow { color: #f6d84a; font-size: 11px; font-weight: 700; letter-spacing: .12em; }
+    h1 { margin-top: 8px; font-size: 25px; letter-spacing: -.04em; }
+    .subtitle { max-width: 900px; margin-top: 8px; color: #8c97a5; font-size: 13px; line-height: 1.55; }
+    .frame { overflow-x: auto; padding: 18px; border: 1px solid #29323d; border-radius: 12px; background: #11151b; }
+    svg { display: block; width: 100%; min-width: 1180px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+    .card { min-height: 128px; padding: 18px; border: 1px solid #29323d; border-radius: 10px; background: #11151b; }
+    .card h2 { margin-bottom: 10px; color: #f6d84a; font-size: 12px; letter-spacing: .06em; }
+    .card li { margin: 7px 0; color: #8c97a5; font-size: 11px; line-height: 1.45; list-style: none; }
+    .footer { margin-top: 18px; color: #5e6875; font-size: 10px; text-align: right; }
+    @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } body { padding: 18px; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <p class="eyebrow">MULTI-ACTOR INVARIANT VERIFICATION</p>
+      <h1>Collision Canary architecture</h1>
+      <p class="subtitle">Two independent Kane browser journeys converge on one persisted business invariant. Public web routes create evidence, while Codex repair execution stays inside the local developer boundary.</p>
+    </header>
+
+    <section class="frame" aria-label="Collision Canary system architecture">
+      <svg viewBox="0 0 1240 760" role="img" aria-labelledby="diagram-title diagram-desc">
+        <title id="diagram-title">Collision Canary system architecture</title>
+        <desc id="diagram-desc">Kane controls two Chrome actors that call a Next.js application on Vercel. The application stores shared state in Neon Postgres. Local adapters combine Kane terminal events with the application verdict and pass a redacted repair packet to Codex.</desc>
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#20262f" stroke-width="0.55"/>
+          </pattern>
+          <marker id="arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#8c97a5"/>
+          </marker>
+          <marker id="arrow-yellow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#f6d84a"/>
+          </marker>
+        </defs>
+
+        <rect width="1240" height="760" fill="#0d1117"/>
+        <rect width="1240" height="760" fill="url(#grid)"/>
+
+        <!-- Connections render before components. -->
+        <path d="M 105 355 L 205 355" fill="none" stroke="#f6d84a" stroke-width="2" marker-end="url(#arrow-yellow)"/>
+        <text x="154" y="343" fill="#8c97a5" font-size="9" text-anchor="middle">start paired run</text>
+
+        <path d="M 350 185 L 350 235" fill="none" stroke="#22d3ee" stroke-width="1.7" marker-end="url(#arrow)"/>
+        <path d="M 300 305 L 300 365" fill="none" stroke="#22d3ee" stroke-width="1.7" marker-end="url(#arrow)"/>
+        <path d="M 400 305 L 400 365" fill="none" stroke="#22d3ee" stroke-width="1.7" marker-end="url(#arrow)"/>
+        <text x="350" y="338" fill="#8c97a5" font-size="9" text-anchor="middle">independent Chrome sessions</text>
+
+        <path d="M 470 412 L 630 300" fill="none" stroke="#22d3ee" stroke-width="1.8" marker-end="url(#arrow)"/>
+        <path d="M 470 487 L 630 340" fill="none" stroke="#22d3ee" stroke-width="1.8" marker-end="url(#arrow)"/>
+        <text x="545" y="365" fill="#8c97a5" font-size="9" text-anchor="middle">HTTPS actor journeys</text>
+
+        <path d="M 810 330 L 1010 330" fill="none" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="910" y="318" fill="#8c97a5" font-size="9" text-anchor="middle">parameterized SQL</text>
+
+        <path d="M 720 405 L 520 555" fill="none" stroke="#34d399" stroke-width="1.8" marker-end="url(#arrow)"/>
+        <text x="650" y="502" fill="#8c97a5" font-size="9" text-anchor="middle">redacted proof JSON</text>
+
+        <path d="M 350 505 L 350 535" fill="none" stroke="#34d399" stroke-width="1.8" marker-end="url(#arrow)"/>
+        <text x="410" y="524" fill="#8c97a5" font-size="9">stable run_end NDJSON</text>
+
+        <path d="M 350 610 L 350 640" fill="none" stroke="#fb7185" stroke-width="1.8" stroke-dasharray="5,5" marker-end="url(#arrow)"/>
+        <text x="430" y="630" fill="#fb7185" font-size="9">explicit local command</text>
+
+        <path d="M 500 682 C 600 730, 790 720, 790 420" fill="none" stroke="#f6d84a" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#arrow-yellow)"/>
+        <text x="690" y="714" fill="#f6d84a" font-size="9" text-anchor="middle">source repair, tests, rerun</text>
+
+        <!-- Boundaries. -->
+        <rect x="180" y="80" width="390" height="630" rx="14" fill="rgba(34, 211, 238, 0.025)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="8,5"/>
+        <text x="196" y="101" fill="#22d3ee" font-size="10" font-weight="700">LOCAL OR CI VERIFICATION BOUNDARY</text>
+
+        <rect x="600" y="80" width="270" height="430" rx="14" fill="rgba(246, 216, 74, 0.025)" stroke="#f6d84a" stroke-width="1" stroke-dasharray="8,5"/>
+        <text x="616" y="101" fill="#f6d84a" font-size="10" font-weight="700">VERCEL PUBLIC RUNTIME</text>
+
+        <rect x="980" y="220" width="220" height="230" rx="14" fill="rgba(167, 139, 250, 0.03)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="8,5"/>
+        <text x="996" y="242" fill="#a78bfa" font-size="10" font-weight="700">NEON IAD1</text>
+
+        <!-- External developer. -->
+        <rect x="25" y="318" width="120" height="74" rx="7" fill="#11151b"/>
+        <rect x="25" y="318" width="120" height="74" rx="7" fill="rgba(30, 41, 59, .55)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="85" y="345" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Developer</text>
+        <text x="85" y="363" fill="#8c97a5" font-size="9" text-anchor="middle">or judge</text>
+        <text x="85" y="379" fill="#8c97a5" font-size="8" text-anchor="middle">terminal + browser</text>
+
+        <!-- Local components. -->
+        <rect x="255" y="125" width="190" height="60" rx="7" fill="#11151b"/>
+        <rect x="255" y="125" width="190" height="60" rx="7" fill="rgba(8, 51, 68, .5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="350" y="150" fill="#f3f5f7" font-size="12" font-weight="700" text-anchor="middle">Kane CLI 0.8.4</text>
+        <text x="350" y="169" fill="#8c97a5" font-size="9" text-anchor="middle">paired test orchestration</text>
+
+        <rect x="220" y="235" width="160" height="70" rx="7" fill="#11151b"/>
+        <rect x="220" y="235" width="160" height="70" rx="7" fill="rgba(8, 51, 68, .5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="300" y="261" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Alice member</text>
+        <text x="300" y="279" fill="#8c97a5" font-size="9" text-anchor="middle">*_test.md</text>
+        <text x="300" y="294" fill="#22d3ee" font-size="8" text-anchor="middle">Chrome session A</text>
+
+        <rect x="390" y="235" width="160" height="70" rx="7" fill="#11151b"/>
+        <rect x="390" y="235" width="160" height="70" rx="7" fill="rgba(8, 51, 68, .5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="470" y="261" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Bob member</text>
+        <text x="470" y="279" fill="#8c97a5" font-size="9" text-anchor="middle">*_test.md</text>
+        <text x="470" y="294" fill="#22d3ee" font-size="8" text-anchor="middle">Chrome session B</text>
+
+        <rect x="230" y="365" width="240" height="140" rx="8" fill="#11151b"/>
+        <rect x="230" y="365" width="240" height="140" rx="8" fill="rgba(6, 78, 59, .42)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="350" y="391" fill="#f3f5f7" font-size="12" font-weight="700" text-anchor="middle">Verification adapter</text>
+        <text x="350" y="415" fill="#8c97a5" font-size="9" text-anchor="middle">run creation + variables</text>
+        <text x="350" y="434" fill="#8c97a5" font-size="9" text-anchor="middle">run_end terminal parser</text>
+        <text x="350" y="453" fill="#8c97a5" font-size="9" text-anchor="middle">aggregate verdict client</text>
+        <text x="350" y="472" fill="#8c97a5" font-size="9" text-anchor="middle">redaction + packet digest</text>
+        <text x="350" y="492" fill="#34d399" font-size="8" text-anchor="middle">no public import path</text>
+
+        <rect x="235" y="535" width="230" height="75" rx="7" fill="#11151b"/>
+        <rect x="235" y="535" width="230" height="75" rx="7" fill="rgba(6, 78, 59, .42)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="350" y="562" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Evidence + repair packet</text>
+        <text x="350" y="581" fill="#8c97a5" font-size="9" text-anchor="middle">JSON, Markdown, SHA-256</text>
+        <text x="350" y="597" fill="#34d399" font-size="8" text-anchor="middle">allowlisted fields only</text>
+
+        <rect x="235" y="640" width="265" height="70" rx="7" fill="#11151b"/>
+        <rect x="235" y="640" width="265" height="70" rx="7" fill="rgba(136, 19, 55, .38)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="367" y="667" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Codex CLI repair boundary</text>
+        <text x="367" y="686" fill="#8c97a5" font-size="9" text-anchor="middle">explicit local invocation + focused tests</text>
+        <text x="367" y="701" fill="#fb7185" font-size="8" text-anchor="middle">never callable from Vercel</text>
+
+        <!-- Vercel components. -->
+        <rect x="630" y="125" width="210" height="70" rx="7" fill="#11151b"/>
+        <rect x="630" y="125" width="210" height="70" rx="7" fill="rgba(8, 51, 68, .5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="735" y="151" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Next.js product surfaces</text>
+        <text x="735" y="170" fill="#8c97a5" font-size="9" text-anchor="middle">run, actor lab, proof</text>
+        <text x="735" y="186" fill="#22d3ee" font-size="8" text-anchor="middle">real persisted records</text>
+
+        <rect x="630" y="235" width="180" height="125" rx="8" fill="#11151b"/>
+        <rect x="630" y="235" width="180" height="125" rx="8" fill="rgba(6, 78, 59, .42)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="720" y="261" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Versioned API</text>
+        <text x="720" y="284" fill="#8c97a5" font-size="9" text-anchor="middle">runs + actor tokens</text>
+        <text x="720" y="303" fill="#8c97a5" font-size="9" text-anchor="middle">barrier + claims</text>
+        <text x="720" y="322" fill="#8c97a5" font-size="9" text-anchor="middle">evaluation + proof</text>
+        <text x="720" y="344" fill="#34d399" font-size="8" text-anchor="middle">typed envelopes</text>
+
+        <rect x="630" y="400" width="210" height="75" rx="7" fill="#11151b"/>
+        <rect x="630" y="400" width="210" height="75" rx="7" fill="rgba(136, 19, 55, .38)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="735" y="427" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Proof projection</text>
+        <text x="735" y="446" fill="#8c97a5" font-size="9" text-anchor="middle">tokens and secrets excluded</text>
+        <text x="735" y="463" fill="#fb7185" font-size="8" text-anchor="middle">reviewer-safe output</text>
+
+        <!-- Neon component. -->
+        <rect x="1010" y="270" width="160" height="135" rx="8" fill="#11151b"/>
+        <rect x="1010" y="270" width="160" height="135" rx="8" fill="rgba(76, 29, 149, .42)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1090" y="296" fill="#f3f5f7" font-size="11" font-weight="700" text-anchor="middle">Postgres authority</text>
+        <text x="1090" y="320" fill="#8c97a5" font-size="9" text-anchor="middle">isolated runs</text>
+        <text x="1090" y="339" fill="#8c97a5" font-size="9" text-anchor="middle">actors + barriers</text>
+        <text x="1090" y="358" fill="#8c97a5" font-size="9" text-anchor="middle">claims + verdicts</text>
+        <text x="1090" y="382" fill="#a78bfa" font-size="8" text-anchor="middle">atomic final claim</text>
+
+        <!-- Legend outside boundaries. -->
+        <g transform="translate(610, 620)">
+          <text x="0" y="0" fill="#f3f5f7" font-size="10" font-weight="700">LEGEND</text>
+          <rect x="0" y="18" width="18" height="11" rx="2" fill="rgba(8, 51, 68, .5)" stroke="#22d3ee"/>
+          <text x="27" y="27" fill="#8c97a5" font-size="8">browser and UI</text>
+          <rect x="130" y="18" width="18" height="11" rx="2" fill="rgba(6, 78, 59, .42)" stroke="#34d399"/>
+          <text x="157" y="27" fill="#8c97a5" font-size="8">application logic</text>
+          <rect x="285" y="18" width="18" height="11" rx="2" fill="rgba(76, 29, 149, .42)" stroke="#a78bfa"/>
+          <text x="312" y="27" fill="#8c97a5" font-size="8">persistent state</text>
+          <rect x="425" y="18" width="18" height="11" rx="2" fill="rgba(136, 19, 55, .38)" stroke="#fb7185"/>
+          <text x="452" y="27" fill="#8c97a5" font-size="8">security boundary</text>
+          <line x1="0" y1="50" x2="25" y2="50" stroke="#f6d84a" stroke-width="1.8" stroke-dasharray="6,4"/>
+          <text x="34" y="53" fill="#8c97a5" font-size="8">repair and rerun</text>
+          <line x1="155" y1="50" x2="180" y2="50" stroke="#8c97a5" stroke-width="1.8"/>
+          <text x="189" y="53" fill="#8c97a5" font-size="8">runtime data flow</text>
+        </g>
+      </svg>
+    </section>
+
+    <section class="cards">
+      <article class="card">
+        <h2>VERIFICATION</h2>
+        <ul>
+          <li>Two independent Kane members drive real Chrome sessions.</li>
+          <li>A database barrier creates reproducible shared timing.</li>
+          <li>Automation keys only on stable run_end events.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>TRUST BOUNDARY</h2>
+        <ul>
+          <li>Public routes create evidence but cannot execute Codex.</li>
+          <li>Proof projection exposes allowlisted fields only.</li>
+          <li>Actor tokens bind run, actor, and expiration.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>PERSISTENCE</h2>
+        <ul>
+          <li>Neon owns all run, actor, barrier, and claim state.</li>
+          <li>No Vercel function depends on process memory.</li>
+          <li>The repaired final claim is atomic in Postgres.</li>
+        </ul>
+      </article>
+    </section>
+
+    <p class="footer">Collision Canary | Architecture v0.1 | August 20, 2026</p>
+  </main>
+</body>
+</html>
