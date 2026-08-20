@@ -23,11 +23,12 @@ The first scenario is a last-seat booking flow:
 | `GET /api/v1/runs/:runId/proof` | Read the redacted proof projection |
 | `GET /api/v1/runs/:runId/repair-packet` | Read a violated-run repair packet |
 
-The visual product layer is intentionally separate from this backend checkpoint.
+The browser surface is a separate client of these routes, so the proof path can
+also be verified directly over HTTP.
 
 ## Setup
 
-Requirements: Node.js 22+, pnpm 11+, PostgreSQL-compatible Neon credentials, and Google Chrome for browser verification.
+Requirements: Node.js 22+, pnpm 11+, Vercel CLI, and PostgreSQL-compatible Neon credentials.
 
 ```bash
 pnpm install
