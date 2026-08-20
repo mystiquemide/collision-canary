@@ -1,10 +1,19 @@
 import { and, eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
+import { neon } from "@neondatabase/serverless";
 
 import { db } from "@/db/client";
 import { claimAttempts, runActors, scenarioResources } from "@/db/schema";
 import type { ActorStatus } from "@/modules/actors/actor-guards";
 import type { ActorKey } from "@/modules/actors/barrier";
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required for claim transactions.");
+}
+
+const sqlClient = neon(databaseUrl);
 
 export type ClaimOutcome = "succeeded" | "rejected";
 
@@ -189,20 +198,29 @@ async function claimAtomically({
   actorId: string;
   resourceId: string;
 }): Promise<ClaimResult> {
-  const result = await db.execute(sql`
-    WITH actor_gate AS MATERIALIZED (
-      SELECT id
-      FROM run_actors
+  const [, claimResult] = await sqlClient.transaction([
+    sqlClient`
+      UPDATE run_actors
+      SET status = 'claiming'::actor_status,
+          request_at = now()
       WHERE id = ${actorId}::uuid
         AND run_id = ${runId}::uuid
         AND status = 'released'::actor_status
-      FOR UPDATE
-    ), target AS MATERIALIZED (
+      RETURNING id
+    `,
+    sqlClient`
+    WITH target AS MATERIALIZED (
       SELECT id, remaining
       FROM scenario_resources
       WHERE id = ${resourceId}::uuid
         AND run_id = ${runId}::uuid
-        AND EXISTS (SELECT 1 FROM actor_gate)
+        AND EXISTS (
+          SELECT 1
+          FROM run_actors
+          WHERE id = ${actorId}::uuid
+            AND run_id = ${runId}::uuid
+            AND status = 'claiming'::actor_status
+        )
     ), claimed AS (
       UPDATE scenario_resources
       SET remaining = scenario_resources.remaining - 1,
@@ -241,7 +259,6 @@ async function claimAtomically({
               THEN 'succeeded'::actor_status
             ELSE 'rejected'::actor_status
           END,
-          request_at = COALESCE(request_at, now()),
           outcome_code = CASE
             WHEN (SELECT result FROM attempt) = 'succeeded'::claim_result
               THEN 'seat_claimed'::text
@@ -250,7 +267,7 @@ async function claimAtomically({
           completed_at = now()
       WHERE id = ${actorId}::uuid
         AND run_id = ${runId}::uuid
-        AND status = 'released'::actor_status
+        AND status = 'claiming'::actor_status
         AND EXISTS (SELECT 1 FROM attempt)
       RETURNING outcome_code
     )
@@ -258,9 +275,10 @@ async function claimAtomically({
       (SELECT result FROM attempt) AS "outcome",
       (SELECT observed_remaining FROM attempt) AS "remaining",
       (SELECT outcome_code FROM actor_update) AS "outcomeCode"
-  `);
+  `,
+  ]);
 
-  const row = result.rows[0] as {
+  const row = (claimResult as unknown[])[0] as {
     outcome: ClaimOutcome | null;
     remaining: number | null;
     outcomeCode: string | null;
