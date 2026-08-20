@@ -1,5 +1,8 @@
-import { randomUUID } from "node:crypto";
-
+import {
+  createRequestId,
+  errorResponse,
+  jsonResponse,
+} from "@/lib/http/json";
 import { createVerificationRun, SCENARIOS, type ScenarioKey } from "@/modules/runs/create-run";
 
 type CreateRunBody = {
@@ -7,49 +10,12 @@ type CreateRunBody = {
   invariantKey?: unknown;
 };
 
-function jsonResponse(
-  requestId: string,
-  data: unknown,
-  status = 200,
-): Response {
-  return Response.json(
-    {
-      data,
-      error: null,
-      requestId,
-    },
-    {
-      status,
-      headers: { "Cache-Control": "no-store" },
-    },
-  );
-}
-
-function errorResponse(
-  requestId: string,
-  code: string,
-  message: string,
-  status: number,
-): Response {
-  return Response.json(
-    {
-      data: null,
-      error: { code, message },
-      requestId,
-    },
-    {
-      status,
-      headers: { "Cache-Control": "no-store" },
-    },
-  );
-}
-
 function isCreateRunBody(value: unknown): value is CreateRunBody {
   return typeof value === "object" && value !== null;
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const requestId = `req_${randomUUID()}`;
+  const requestId = createRequestId();
   let body: unknown;
 
   try {
