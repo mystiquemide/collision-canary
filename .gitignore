@@ -1,6 +1,14 @@
 node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 .next/
 out/
+build/
 coverage/
 
 .env*
@@ -11,4 +19,20 @@ coverage/
 .testmuai/sessions/
 
 *.log
+*.pem
+*.tsbuildinfo
+next-env.d.ts
 .DS_Store
+
+# Local orchestration output
+.collision-canary/
+
+# Internal planning context, retained locally only
+memory.md
+docs/PRD.md
+docs/TASKS.md
+
+# Generated brand concepts require explicit approval before publication
+assets/brand/*-concept.png
+assets/brand/*-preview.png
+.vercel
