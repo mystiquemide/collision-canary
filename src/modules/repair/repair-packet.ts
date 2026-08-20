@@ -43,6 +43,41 @@ export type RepairPacket = RepairPacketBody & {
   packetSha256: string;
 };
 
+const REPAIR_TARGET = {
+  routes: [
+    "src/app/api/v1/runs/[runId]/actors/[actorKey]/claim/route.ts",
+  ],
+  modules: ["src/modules/claims/claim-service.ts"],
+} as const;
+
+const ACCEPTANCE_CRITERIA = [
+  "At most one actor receives a successful claim outcome for capacity one.",
+  "The persisted successful claim count matches the visible successful outcome count.",
+  "A losing actor receives the stable seat_unavailable outcome.",
+  "The same paired browser proof can rerun and produce a satisfied invariant.",
+] as const;
+
+const PROOF_SCOPE =
+  "Application and database observations for one run. Kane browser evidence is attached by the local verification runner.";
+
+const ACTOR_STATUSES = [
+  "created",
+  "armed",
+  "released",
+  "claiming",
+  "succeeded",
+  "rejected",
+  "errored",
+] as const;
+
+const OUTCOME_CODES = ["seat_claimed", "seat_unavailable", null] as const;
+
+const REASON_CODES = [
+  "observation_conflict",
+  "non_linearizable_outcome",
+  "capacity_invariant_violated",
+] as const;
+
 function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
@@ -76,27 +111,109 @@ export function createRepairPacket(proof: RunProof): RepairPacket {
       reasonCode: proof.evaluation.reasonCode,
     },
     repairTarget: {
-      routes: [
-        "src/app/api/v1/runs/[runId]/actors/[actorKey]/claim/route.ts",
-      ],
-      modules: ["src/modules/claims/claim-service.ts"],
+      routes: [...REPAIR_TARGET.routes],
+      modules: [...REPAIR_TARGET.modules],
     },
-    acceptanceCriteria: [
-      "At most one actor receives a successful claim outcome for capacity one.",
-      "The persisted successful claim count matches the visible successful outcome count.",
-      "A losing actor receives the stable seat_unavailable outcome.",
-      "The same paired browser proof can rerun and produce a satisfied invariant.",
-    ],
-    proofScope:
-      "Application and database observations for one run. Kane browser evidence is attached by the local verification runner.",
+    acceptanceCriteria: [...ACCEPTANCE_CRITERIA],
+    proofScope: PROOF_SCOPE,
   };
 
   return { ...body, packetSha256: packetHash(body) };
 }
 
-export function verifyRepairPacket(packet: RepairPacket): boolean {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isExactStringArray(
+  value: unknown,
+  expected: readonly string[],
+): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length === expected.length &&
+    value.every((item, index) => item === expected[index])
+  );
+}
+
+function isSafeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value);
+}
+
+export function verifyRepairPacket(packet: unknown): packet is RepairPacket {
+  if (!isRecord(packet)) return false;
+
   const { packetSha256, ...body } = packet;
-  return packetSha256 === packetHash(body);
+  if (
+    typeof packetSha256 !== "string" ||
+    !/^[a-f0-9]{64}$/.test(packetSha256) ||
+    body.schemaVersion !== "1.0" ||
+    body.scenarioKey !== "last-seat-v1"
+  ) {
+    return false;
+  }
+
+  if (
+    typeof body.failedRunId !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      body.failedRunId,
+    ) ||
+    !isRecord(body.invariant) ||
+    body.invariant.key !== "capacity-at-most-one-v1" ||
+    body.invariant.statement !== "At most one actor can claim the final seat." ||
+    !isRecord(body.observations) ||
+    !isExactStringArray(body.repairTarget && isRecord(body.repairTarget) ? body.repairTarget.routes : undefined, REPAIR_TARGET.routes) ||
+    !isExactStringArray(body.repairTarget && isRecord(body.repairTarget) ? body.repairTarget.modules : undefined, REPAIR_TARGET.modules) ||
+    !isExactStringArray(body.acceptanceCriteria, ACCEPTANCE_CRITERIA)
+  ) {
+    return false;
+  }
+
+  const observations = body.observations;
+  const actorOutcomes = observations.actorOutcomes;
+  if (!Array.isArray(actorOutcomes) || actorOutcomes.length !== 2) {
+    return false;
+  }
+
+  const actorKeys = new Set<string>();
+  for (const actor of actorOutcomes) {
+    if (!isRecord(actor)) return false;
+    if (
+      typeof actor.actorKey !== "string" ||
+      actorKeys.has(actor.actorKey) ||
+      !["alice", "bob"].includes(actor.actorKey) ||
+      typeof actor.status !== "string" ||
+      !ACTOR_STATUSES.includes(
+        actor.status as (typeof ACTOR_STATUSES)[number],
+      ) ||
+      (actor.outcomeCode !== null &&
+        !OUTCOME_CODES.includes(
+          actor.outcomeCode as (typeof OUTCOME_CODES)[number],
+        ))
+    ) {
+      return false;
+    }
+    actorKeys.add(actor.actorKey);
+  }
+
+  if (
+    actorKeys.size !== 2 ||
+    !actorKeys.has("alice") ||
+    !actorKeys.has("bob") ||
+    !isSafeInteger(observations.capacity) ||
+    !isSafeInteger(observations.remaining) ||
+    !isSafeInteger(observations.successfulClaims) ||
+    !isSafeInteger(observations.persistedClaims) ||
+    typeof observations.reasonCode !== "string" ||
+    !REASON_CODES.includes(
+      observations.reasonCode as (typeof REASON_CODES)[number],
+    ) ||
+    body.proofScope !== PROOF_SCOPE
+  ) {
+    return false;
+  }
+
+  return packetSha256 === packetHash(body as RepairPacketBody);
 }
 
 export function repairPacketMarkdown(packet: RepairPacket): string {

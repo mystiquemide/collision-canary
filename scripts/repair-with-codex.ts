@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, realpath } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { execFile as execFileCallback } from "node:child_process";
@@ -16,17 +17,42 @@ function argument(name: string): string | undefined {
   return index >= 0 ? process.argv[index + 1] : undefined;
 }
 
-function ensureInsideRepository(path: string): string {
-  const repoRoot = resolve(process.cwd());
-  const resolved = resolve(path);
+async function ensureInsideRepository(path: string): Promise<string> {
+  const repoRoot = await realpath(process.cwd());
+  const resolved = await realpath(resolve(path));
   if (!resolved.startsWith(`${repoRoot}/`)) {
     throw new Error("Repair packet must be inside the repository.");
   }
   return resolved;
 }
 
-async function repositoryState(): Promise<{ head: string; files: Set<string> }> {
+type RepositoryState = {
+  head: string;
+  files: Map<string, string>;
+};
+
+function statusPaths(status: string): string[] {
+  return status
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const path = line.slice(3).trim();
+      const renameSeparator = path.lastIndexOf(" -> ");
+      return renameSeparator >= 0
+        ? path.slice(renameSeparator + " -> ".length)
+        : path;
+    });
+}
+
+function fileDigest(content: Buffer): string {
+  return createHash("sha256").update(content).digest("hex");
+}
+
+async function repositoryState(): Promise<RepositoryState> {
   const { stdout: head } = await execFile("git", ["rev-parse", "HEAD"], {
+    cwd: process.cwd(),
+  });
+  const { stdout: tracked } = await execFile("git", ["ls-files", "-z"], {
     cwd: process.cwd(),
   });
   const { stdout: status } = await execFile(
@@ -34,16 +60,31 @@ async function repositoryState(): Promise<{ head: string; files: Set<string> }> 
     ["status", "--porcelain=v1", "--untracked-files=all"],
     { cwd: process.cwd() },
   );
-  const files = new Set(
-    status
-      .split("\n")
-      .filter(Boolean)
-      .map((line) => {
-        const path = line.slice(3).trim();
-        return path.includes(" -> ") ? path.split(" -> ").at(-1)! : path;
-      }),
+
+  const paths = new Set([
+    ...tracked.split("\0").filter(Boolean),
+    ...statusPaths(status),
+  ]);
+  const files = new Map<string, string>();
+
+  await Promise.all(
+    [...paths].map(async (path) => {
+      try {
+        files.set(path, fileDigest(await readFile(resolve(process.cwd(), path))));
+      } catch {
+        files.set(path, "<missing>");
+      }
+    }),
   );
+
   return { head: head.trim(), files };
+}
+
+function changedFiles(before: RepositoryState, after: RepositoryState): string[] {
+  const paths = new Set([...before.files.keys(), ...after.files.keys()]);
+  return [...paths].filter(
+    (path) => before.files.get(path) !== after.files.get(path),
+  );
 }
 
 function repairPrompt(packet: RepairPacket): string {
@@ -72,7 +113,7 @@ async function main(): Promise<void> {
   const packetPath = argument("--packet");
   if (!packetPath) throw new Error("--packet is required.");
 
-  const packetFile = ensureInsideRepository(packetPath);
+  const packetFile = await ensureInsideRepository(packetPath);
   const packet = JSON.parse(await readFile(packetFile, "utf8")) as RepairPacket;
 
   if (!verifyRepairPacket(packet)) {
@@ -118,8 +159,8 @@ async function main(): Promise<void> {
     ...packet.repairTarget.routes,
     ...packet.repairTarget.modules,
   ]);
-  const unexpectedFiles = [...after.files].filter(
-    (file) => !before.files.has(file) && !allowedFiles.has(file),
+  const unexpectedFiles = changedFiles(before, after).filter(
+    (file) => !allowedFiles.has(file),
   );
 
   if (unexpectedFiles.length > 0) {

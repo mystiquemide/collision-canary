@@ -18,7 +18,7 @@ async function createFixture(
   await db.batch([
     db.insert(schema.verificationRuns).values({
       id: runId,
-      scenarioKey: violated ? "evaluator-violated" : "evaluator-satisfied",
+      scenarioKey: "last-seat-v1",
       invariantKey: "capacity-at-most-one-v1",
       status: "released",
     }),
@@ -77,10 +77,11 @@ async function createFixture(
 }
 
 async function main(): Promise<void> {
-  const [{ db }, schema, evaluator] = await Promise.all([
+  const [{ db }, schema, evaluator, repair] = await Promise.all([
     import("@/db/client"),
     import("@/db/schema"),
     import("@/modules/invariants/evaluate-run"),
+    import("@/modules/repair/repair-packet"),
   ]);
 
   const violatedRunId = await createFixture(db, schema, true);
@@ -93,6 +94,20 @@ async function main(): Promise<void> {
     assert.equal(violated?.evaluation?.verdict, "violated");
     assert.equal(violated?.evaluation?.reasonCode, "non_linearizable_outcome");
     assert.equal(violated?.evaluation?.successfulClaims, 2);
+    assert.ok(violated);
+    const packet = repair.createRepairPacket(violated);
+    assert.equal(repair.verifyRepairPacket(packet), true);
+    assert.equal(
+      repair.verifyRepairPacket({
+        ...packet,
+        repairTarget: {
+          routes: ["src/app/page.tsx"],
+          modules: packet.repairTarget.modules,
+        },
+      }),
+      false,
+    );
+    assert.equal(repair.verifyRepairPacket({}), false);
     assert.equal(satisfied?.evaluation?.verdict, "satisfied");
     assert.equal(satisfied?.evaluation?.reasonCode, "capacity_invariant_satisfied");
     assert.equal(satisfied?.evaluation?.successfulClaims, 1);

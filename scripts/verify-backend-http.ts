@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 const baseUrl = process.env.COLLISION_CANARY_BASE_URL ?? "http://127.0.0.1:3001";
+const failureFixture = process.env.COLLISION_CANARY_FAILURE_FIXTURE === "true";
 
 type Envelope<T> = {
   data: T | null;
@@ -88,18 +89,29 @@ async function main(): Promise<void> {
       { method: "POST", headers: actorHeaders(bobToken) },
     ),
   ]);
-  assert.deepEqual(
-    [aliceClaim.body.data?.outcome, bobClaim.body.data?.outcome].sort(),
-    ["rejected", "succeeded"],
-  );
-  assert.deepEqual([aliceClaim.status, bobClaim.status].sort(), [200, 409]);
+  if (failureFixture) {
+    assert.deepEqual(
+      [aliceClaim.body.data?.outcome, bobClaim.body.data?.outcome].sort(),
+      ["succeeded", "succeeded"],
+    );
+    assert.deepEqual([aliceClaim.status, bobClaim.status].sort(), [200, 200]);
+  } else {
+    assert.deepEqual(
+      [aliceClaim.body.data?.outcome, bobClaim.body.data?.outcome].sort(),
+      ["rejected", "succeeded"],
+    );
+    assert.deepEqual([aliceClaim.status, bobClaim.status].sort(), [200, 409]);
+  }
 
   const evaluated = await request<{ evaluation: { verdict: string } }>(
     `/api/v1/runs/${runId}/evaluate`,
     { method: "POST" },
   );
   assert.equal(evaluated.status, 200);
-  assert.equal(evaluated.body.data?.evaluation.verdict, "satisfied");
+  assert.equal(
+    evaluated.body.data?.evaluation.verdict,
+    failureFixture ? "violated" : "satisfied",
+  );
 
   const proof = await request<{
     run: { status: string };
@@ -107,13 +119,26 @@ async function main(): Promise<void> {
     actors: Array<Record<string, unknown>>;
   }>(`/api/v1/runs/${runId}/proof`);
   assert.equal(proof.status, 200);
-  assert.equal(proof.body.data?.run.status, "verified");
-  assert.equal(proof.body.data?.evaluation.verdict, "satisfied");
+  assert.equal(
+    proof.body.data?.run.status,
+    failureFixture ? "failed" : "verified",
+  );
+  assert.equal(
+    proof.body.data?.evaluation.verdict,
+    failureFixture ? "violated" : "satisfied",
+  );
   assert.equal(proof.body.data?.actors.some((actor) => "token" in actor), false);
 
   const repairPacket = await request(`/api/v1/runs/${runId}/repair-packet`);
-  assert.equal(repairPacket.status, 409);
-  assert.equal(repairPacket.body.error?.code, "repair_packet_unavailable");
+  if (failureFixture) {
+    assert.equal(repairPacket.status, 200);
+    const serializedPacket = JSON.stringify(repairPacket.body.data);
+    assert.match(serializedPacket, /packetSha256/);
+    assert.doesNotMatch(serializedPacket, /token|password|DATABASE_URL|postgresql:\/\//i);
+  } else {
+    assert.equal(repairPacket.status, 409);
+    assert.equal(repairPacket.body.error?.code, "repair_packet_unavailable");
+  }
 
   const invalid = await request("/api/v1/runs", {
     method: "POST",
@@ -123,7 +148,14 @@ async function main(): Promise<void> {
   assert.equal(invalid.status, 400);
   assert.equal(invalid.body.error?.code, "invalid_request");
 
-  console.log(JSON.stringify({ status: "passed", runId, proofStatus: "verified" }));
+  console.log(
+    JSON.stringify({
+      status: "passed",
+      mode: failureFixture ? "failure_fixture" : "atomic",
+      runId,
+      proofStatus: failureFixture ? "failed" : "verified",
+    }),
+  );
 }
 
 main().catch((error: unknown) => {

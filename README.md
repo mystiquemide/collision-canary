@@ -47,6 +47,12 @@ With the development server running:
 COLLISION_CANARY_BASE_URL=http://127.0.0.1:3001 pnpm test:backend-http
 ```
 
+The same verifier can exercise the local failure fixture and repair packet:
+
+```bash
+COLLISION_CANARY_FAILURE_FIXTURE=true COLLISION_CANARY_BASE_URL=http://127.0.0.1:3001 pnpm test:backend-http
+```
+
 Focused backend checks:
 
 ```bash
