@@ -36,3 +36,6 @@ docs/TASKS.md
 assets/brand/*-concept.png
 assets/brand/*-preview.png
 .vercel
+
+# Agent operating rules, retained locally only
+/AGENTS.md
