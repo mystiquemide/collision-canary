@@ -12,7 +12,9 @@
     "db:check": "drizzle-kit check",
     "test:actor-guards": "tsx scripts/verify-actor-guards.ts",
     "test:atomic-claims": "tsx scripts/verify-atomic-claims.ts",
-    "test:invariant-evaluator": "tsx scripts/verify-invariant-evaluator.ts"
+    "test:invariant-evaluator": "tsx scripts/verify-invariant-evaluator.ts",
+    "build:repair-packet": "tsx scripts/build-repair-packet.ts",
+    "repair:codex": "tsx scripts/repair-with-codex.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
