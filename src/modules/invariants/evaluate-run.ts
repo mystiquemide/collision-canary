@@ -41,6 +41,15 @@ type RunState = {
 
 type QueryClient = Pick<typeof db, "select">;
 
+export class RunNotReadyError extends Error {
+  readonly code = "run_not_ready" as const;
+
+  constructor() {
+    super("Both actors must reach a terminal outcome before evaluation.");
+    this.name = "RunNotReadyError";
+  }
+}
+
 export type RunProof = {
   run: {
     id: string;
@@ -384,6 +393,9 @@ export async function evaluateRun(runId: string): Promise<RunProof | null> {
   }
 
   const calculated = calculateEvaluation(state);
+  if (calculated.reasonCode === "incomplete_actor_outcomes") {
+    throw new RunNotReadyError();
+  }
   const evaluatedAt = new Date();
   const evaluationId = randomUUID();
 

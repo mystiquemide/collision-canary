@@ -8,6 +8,13 @@
       "when": 1787207778015,
       "tag": "0000_shallow_firelord",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787270020005,
+      "tag": "0001_bumpy_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

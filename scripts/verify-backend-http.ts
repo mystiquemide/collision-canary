@@ -99,6 +99,13 @@ async function main(): Promise<void> {
   assert.equal(prematureClaim.status, 409);
   assert.equal(prematureClaim.body.error?.code, "actor_not_released");
 
+  const prematureEvaluation = await request(
+    `/api/v1/runs/${runId}/evaluate`,
+    { method: "POST" },
+  );
+  assert.equal(prematureEvaluation.status, 409);
+  assert.equal(prematureEvaluation.body.error?.code, "run_not_ready");
+
   const armAlice = await request<{ snapshot: { arrivedCount: number } }>(
     `/api/v1/runs/${runId}/actors/alice/arm`,
     { method: "POST", headers: actorHeaders(aliceToken) },
@@ -181,6 +188,18 @@ async function main(): Promise<void> {
     failureFixture ? "violated" : "satisfied",
   );
   assert.equal(proof.body.data?.actors.some((actor) => "token" in actor), false);
+
+  const listed = await request<{
+    runs: Array<{ id: string; status: string }>;
+  }>("/api/v1/runs");
+  assert.equal(listed.status, 200);
+  assert.equal(listed.body.data?.runs.some((run) => run.id === runId), true);
+  assert.equal(
+    listed.body.data?.runs.every((run) =>
+      run.status === "failed" || run.status === "verified"
+    ),
+    true,
+  );
 
   const repairPacket = await request(`/api/v1/runs/${runId}/repair-packet`);
   if (failureFixture) {

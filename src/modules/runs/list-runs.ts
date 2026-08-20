@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { invariantEvaluations, verificationRuns } from "@/db/schema";
@@ -35,6 +35,7 @@ export async function listRuns(limit = 50): Promise<RunListItem[]> {
       invariantEvaluations,
       eq(invariantEvaluations.runId, verificationRuns.id),
     )
+    .where(inArray(verificationRuns.status, ["failed", "verified"]))
     .orderBy(desc(verificationRuns.createdAt))
     .limit(limit);
 

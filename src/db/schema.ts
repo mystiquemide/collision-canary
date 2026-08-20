@@ -49,6 +49,7 @@ export const verificationRuns = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     scenarioKey: text("scenario_key").notNull(),
     invariantKey: text("invariant_key").notNull(),
+    creatorFingerprint: text("creator_fingerprint"),
     status: verificationRunStatus("status").notNull().default("created"),
     repairCycleId: uuid("repair_cycle_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -59,6 +60,9 @@ export const verificationRuns = pgTable(
   },
   (table) => [
     index("verification_runs_created_at_idx").on(table.createdAt),
+    index("verification_runs_creator_fingerprint_idx").on(
+      table.creatorFingerprint,
+    ),
     index("verification_runs_status_idx").on(table.status),
   ],
 );

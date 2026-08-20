@@ -76,6 +76,49 @@ async function createFixture(
   return runId;
 }
 
+async function createIncompleteFixture(
+  db: typeof import("@/db/client").db,
+  schema: typeof import("@/db/schema"),
+) {
+  const runId = randomUUID();
+
+  await db.batch([
+    db.insert(schema.verificationRuns).values({
+      id: runId,
+      scenarioKey: "last-seat-v1",
+      invariantKey: "capacity-at-most-one-v1",
+      status: "created",
+    }),
+    db.insert(schema.scenarioResources).values({
+      runId,
+      capacity: 1,
+      remaining: 1,
+    }),
+    db.insert(schema.runActors).values([
+      {
+        runId,
+        actorKey: "alice",
+        displayName: "Alice",
+        status: "created",
+      },
+      {
+        runId,
+        actorKey: "bob",
+        displayName: "Bob",
+        status: "created",
+      },
+    ]),
+    db.insert(schema.runBarriers).values({
+      runId,
+      expectedCount: 2,
+      arrivedCount: 0,
+      releaseVersion: 0,
+    }),
+  ] as const);
+
+  return runId;
+}
+
 async function main(): Promise<void> {
   const [{ db }, schema, evaluator, repair] = await Promise.all([
     import("@/db/client"),
@@ -87,6 +130,7 @@ async function main(): Promise<void> {
   const violatedRunId = await createFixture(db, schema, true);
   const satisfiedRunId = await createFixture(db, schema, false);
   const concurrentRunId = await createFixture(db, schema, false);
+  const incompleteRunId = await createIncompleteFixture(db, schema);
 
   try {
     const violated = await evaluator.evaluateRun(violatedRunId);
@@ -121,6 +165,16 @@ async function main(): Promise<void> {
     assert.equal(secondEvaluation?.evaluation?.verdict, "satisfied");
     assert.equal(firstEvaluation?.run.status, "verified");
     assert.equal(secondEvaluation?.run.status, "verified");
+
+    await assert.rejects(
+      evaluator.evaluateRun(incompleteRunId),
+      (error: unknown) =>
+        error instanceof evaluator.RunNotReadyError &&
+        error.code === "run_not_ready",
+    );
+    const incompleteProof = await evaluator.getRunProof(incompleteRunId);
+    assert.equal(incompleteProof?.evaluation, null);
+    assert.equal(incompleteProof?.run.status, "created");
 
     const evaluations = await db
       .select({ id: schema.invariantEvaluations.id })
@@ -159,6 +213,9 @@ async function main(): Promise<void> {
     await db
       .delete(schema.verificationRuns)
       .where(eq(schema.verificationRuns.id, concurrentRunId));
+    await db
+      .delete(schema.verificationRuns)
+      .where(eq(schema.verificationRuns.id, incompleteRunId));
   }
 }
 

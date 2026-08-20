@@ -215,9 +215,16 @@ export function ActorLab() {
           ) : null}
 
           {phase === "error" ? (
-            <p className="rounded-xl bg-[#FDE7E2] px-4 py-3 text-sm text-collision">
-              {message}
-            </p>
+            <div className="rounded-xl bg-[#FDE7E2] px-4 py-3">
+              <p className="text-sm text-collision">{message}</p>
+              <button
+                type="button"
+                onClick={arm}
+                className="mt-3 inline-flex min-h-[44px] items-center rounded-xl bg-secondary px-4 text-sm font-semibold text-ink transition-[filter] hover:brightness-95"
+              >
+                Try again
+              </button>
+            </div>
           ) : null}
         </>
       ) : null}

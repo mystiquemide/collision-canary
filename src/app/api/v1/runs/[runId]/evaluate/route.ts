@@ -1,5 +1,8 @@
 import { createRequestId, errorResponse, jsonResponse } from "@/lib/http/json";
-import { evaluateRun } from "@/modules/invariants/evaluate-run";
+import {
+  evaluateRun,
+  RunNotReadyError,
+} from "@/modules/invariants/evaluate-run";
 import { isUuid } from "@/modules/actors/barrier";
 
 type RouteContext = {
@@ -37,6 +40,10 @@ export async function POST(
 
     return jsonResponse(requestId, proof);
   } catch (error) {
+    if (error instanceof RunNotReadyError) {
+      return errorResponse(requestId, error.code, error.message, 409);
+    }
+
     console.error(
       JSON.stringify({
         event: "run_evaluation_failed",

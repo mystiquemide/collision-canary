@@ -1,0 +1,777 @@
+{
+  "id": "0377216a-c978-4a34-bfbe-c5fc15e1f316",
+  "prevId": "fd1609a7-07f3-4b8f-941c-08c8727aad20",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.claim_attempts": {
+      "name": "claim_attempts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "claim_result",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observed_remaining": {
+          "name": "observed_remaining",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "claim_attempts_run_id_idx": {
+          "name": "claim_attempts_run_id_idx",
+          "columns": [
+            {
+              "expression": "run_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "claim_attempts_run_id_verification_runs_id_fk": {
+          "name": "claim_attempts_run_id_verification_runs_id_fk",
+          "tableFrom": "claim_attempts",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "claim_attempts_actor_id_run_actors_id_fk": {
+          "name": "claim_attempts_actor_id_run_actors_id_fk",
+          "tableFrom": "claim_attempts",
+          "tableTo": "run_actors",
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "claim_attempts_resource_id_scenario_resources_id_fk": {
+          "name": "claim_attempts_resource_id_scenario_resources_id_fk",
+          "tableFrom": "claim_attempts",
+          "tableTo": "scenario_resources",
+          "columnsFrom": [
+            "resource_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "claim_attempts_actor_id_unique": {
+          "name": "claim_attempts_actor_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "actor_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.invariant_evaluations": {
+      "name": "invariant_evaluations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verdict": {
+          "name": "verdict",
+          "type": "invariant_verdict",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "successful_claims": {
+          "name": "successful_claims",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persisted_claims": {
+          "name": "persisted_claims",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "final_remaining": {
+          "name": "final_remaining",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evaluated_at": {
+          "name": "evaluated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "invariant_evaluations_verdict_idx": {
+          "name": "invariant_evaluations_verdict_idx",
+          "columns": [
+            {
+              "expression": "verdict",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "invariant_evaluations_run_id_verification_runs_id_fk": {
+          "name": "invariant_evaluations_run_id_verification_runs_id_fk",
+          "tableFrom": "invariant_evaluations",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "invariant_evaluations_run_id_unique": {
+          "name": "invariant_evaluations_run_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "run_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "invariant_evaluations_counts_non_negative": {
+          "name": "invariant_evaluations_counts_non_negative",
+          "value": "\"invariant_evaluations\".\"successful_claims\" >= 0 AND \"invariant_evaluations\".\"persisted_claims\" >= 0 AND \"invariant_evaluations\".\"final_remaining\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.repair_cycles": {
+      "name": "repair_cycles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "failed_run_id": {
+          "name": "failed_run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verified_run_id": {
+          "name": "verified_run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "packet_sha256": {
+          "name": "packet_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "repair_cycles_failed_run_id_verification_runs_id_fk": {
+          "name": "repair_cycles_failed_run_id_verification_runs_id_fk",
+          "tableFrom": "repair_cycles",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "failed_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "repair_cycles_verified_run_id_verification_runs_id_fk": {
+          "name": "repair_cycles_verified_run_id_verification_runs_id_fk",
+          "tableFrom": "repair_cycles",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "verified_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "repair_cycles_failed_run_id_unique": {
+          "name": "repair_cycles_failed_run_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "failed_run_id"
+          ]
+        },
+        "repair_cycles_verified_run_id_unique": {
+          "name": "repair_cycles_verified_run_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "verified_run_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.run_actors": {
+      "name": "run_actors",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_key": {
+          "name": "actor_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "actor_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'created'"
+        },
+        "armed_at": {
+          "name": "armed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "request_at": {
+          "name": "request_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome_code": {
+          "name": "outcome_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "run_actors_run_id_idx": {
+          "name": "run_actors_run_id_idx",
+          "columns": [
+            {
+              "expression": "run_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "run_actors_status_idx": {
+          "name": "run_actors_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "run_actors_run_id_verification_runs_id_fk": {
+          "name": "run_actors_run_id_verification_runs_id_fk",
+          "tableFrom": "run_actors",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "run_actors_run_id_actor_key_unique": {
+          "name": "run_actors_run_id_actor_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "run_id",
+            "actor_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.run_barriers": {
+      "name": "run_barriers",
+      "schema": "",
+      "columns": {
+        "run_id": {
+          "name": "run_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expected_count": {
+          "name": "expected_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 2
+        },
+        "arrived_count": {
+          "name": "arrived_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "release_version": {
+          "name": "release_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "released_at": {
+          "name": "released_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "run_barriers_run_id_verification_runs_id_fk": {
+          "name": "run_barriers_run_id_verification_runs_id_fk",
+          "tableFrom": "run_barriers",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "run_barriers_expected_count_positive": {
+          "name": "run_barriers_expected_count_positive",
+          "value": "\"run_barriers\".\"expected_count\" > 0"
+        },
+        "run_barriers_arrived_count_valid": {
+          "name": "run_barriers_arrived_count_valid",
+          "value": "\"run_barriers\".\"arrived_count\" >= 0 AND \"run_barriers\".\"arrived_count\" <= \"run_barriers\".\"expected_count\""
+        },
+        "run_barriers_release_version_non_negative": {
+          "name": "run_barriers_release_version_non_negative",
+          "value": "\"run_barriers\".\"release_version\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.scenario_resources": {
+      "name": "scenario_resources",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "run_id": {
+          "name": "run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "capacity": {
+          "name": "capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "remaining": {
+          "name": "remaining",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "scenario_resources_run_id_verification_runs_id_fk": {
+          "name": "scenario_resources_run_id_verification_runs_id_fk",
+          "tableFrom": "scenario_resources",
+          "tableTo": "verification_runs",
+          "columnsFrom": [
+            "run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "scenario_resources_run_id_unique": {
+          "name": "scenario_resources_run_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "run_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "scenario_resources_capacity_positive": {
+          "name": "scenario_resources_capacity_positive",
+          "value": "\"scenario_resources\".\"capacity\" > 0"
+        },
+        "scenario_resources_remaining_valid": {
+          "name": "scenario_resources_remaining_valid",
+          "value": "\"scenario_resources\".\"remaining\" >= 0 AND \"scenario_resources\".\"remaining\" <= \"scenario_resources\".\"capacity\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.verification_runs": {
+      "name": "verification_runs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "scenario_key": {
+          "name": "scenario_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invariant_key": {
+          "name": "invariant_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creator_fingerprint": {
+          "name": "creator_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "verification_run_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'created'"
+        },
+        "repair_cycle_id": {
+          "name": "repair_cycle_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "released_at": {
+          "name": "released_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "verification_runs_created_at_idx": {
+          "name": "verification_runs_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "verification_runs_creator_fingerprint_idx": {
+          "name": "verification_runs_creator_fingerprint_idx",
+          "columns": [
+            {
+              "expression": "creator_fingerprint",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "verification_runs_status_idx": {
+          "name": "verification_runs_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.actor_status": {
+      "name": "actor_status",
+      "schema": "public",
+      "values": [
+        "created",
+        "armed",
+        "released",
+        "claiming",
+        "succeeded",
+        "rejected",
+        "errored"
+      ]
+    },
+    "public.claim_result": {
+      "name": "claim_result",
+      "schema": "public",
+      "values": [
+        "succeeded",
+        "rejected",
+        "errored"
+      ]
+    },
+    "public.invariant_verdict": {
+      "name": "invariant_verdict",
+      "schema": "public",
+      "values": [
+        "violated",
+        "satisfied",
+        "infra_error"
+      ]
+    },
+    "public.verification_run_status": {
+      "name": "verification_run_status",
+      "schema": "public",
+      "values": [
+        "created",
+        "armed",
+        "released",
+        "evaluating",
+        "failed",
+        "verified",
+        "infra_error"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -48,6 +48,52 @@ function ActorTrack({ actor, violated }: { actor: Actor; violated: boolean }) {
   );
 }
 
+function CycleProofCard({
+  label,
+  proof,
+}: {
+  label: string;
+  proof: RunProof;
+}) {
+  const evaluation = proof.evaluation;
+  const collided = evaluation?.verdict === "violated";
+
+  return (
+    <Link
+      href={`/runs/${proof.run.id}`}
+      className="rounded-xl border border-border bg-canvas p-4 transition-[filter] hover:brightness-95"
+    >
+      <span className="font-mono text-[0.62rem] uppercase tracking-[0.08em] text-muted">
+        {label}
+      </span>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="font-mono text-sm text-ink">
+          run_{proof.run.id.slice(0, 4).toUpperCase()}
+        </span>
+        <span
+          className={
+            collided
+              ? "rounded-full bg-[#FDE7E2] px-2.5 py-1 font-mono text-[0.66rem] font-bold text-collision"
+              : "rounded-full bg-[#DEF6EC] px-2.5 py-1 font-mono text-[0.66rem] font-bold text-verified"
+          }
+        >
+          {collided ? "Collision" : "Verified"}
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-y-1 font-mono text-xs">
+        <dt className="text-muted">Winners</dt>
+        <dd className="text-right text-ink">
+          {evaluation?.successfulClaims ?? 0}
+        </dd>
+        <dt className="text-muted">Reason</dt>
+        <dd className="break-all text-right text-ink">
+          {evaluation?.reasonCode ?? "unavailable"}
+        </dd>
+      </dl>
+    </Link>
+  );
+}
+
 export default async function ProofPage({
   params,
 }: {
@@ -94,6 +140,24 @@ export default async function ProofPage({
   }
 
   const cycle = proof.repairCycle;
+  const counterpartId = cycle
+    ? cycle.failedRunId === proof.run.id
+      ? cycle.verifiedRunId
+      : cycle.failedRunId
+    : null;
+  const counterpart = counterpartId
+    ? await getRunProof(counterpartId).catch(() => null)
+    : null;
+  const failedProof = cycle
+    ? cycle.failedRunId === proof.run.id
+      ? proof
+      : counterpart
+    : null;
+  const verifiedProof = cycle
+    ? cycle.verifiedRunId === proof.run.id
+      ? proof
+      : counterpart
+    : null;
 
   return (
     <main className="mx-auto w-full max-w-[1200px] px-4 pb-16">
@@ -141,7 +205,7 @@ export default async function ProofPage({
                   {proof.evaluation.finalRemaining}
                 </dd>
                 <dt className="text-muted">Reason</dt>
-                <dd className="text-right text-ink">
+                <dd className="break-all text-right text-ink">
                   {proof.evaluation.reasonCode}
                 </dd>
               </dl>
@@ -178,27 +242,20 @@ export default async function ProofPage({
           </div>
         ) : null}
 
-        {cycle ? (
+        {cycle && failedProof && verifiedProof ? (
           <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-            {cycle.verifiedRunId && cycle.verifiedRunId !== proof.run.id ? (
-              <Link
-                href={`/runs/${cycle.verifiedRunId}`}
-                className="font-mono text-sm font-semibold text-primary hover:underline"
-              >
-                View the verified rerun
-              </Link>
-            ) : cycle.failedRunId !== proof.run.id ? (
-              <Link
-                href={`/runs/${cycle.failedRunId}`}
-                className="font-mono text-sm font-semibold text-primary hover:underline"
-              >
-                View the original collision
-              </Link>
-            ) : (
-              <p className="font-mono text-sm text-muted">
-                This run is linked in a repair cycle.
-              </p>
-            )}
+            <h2 className="text-lg font-bold text-ink">Before and after</h2>
+            <p className="mt-1 text-sm text-muted">
+              One failed proof and one verified rerun, joined by the repair
+              packet digest.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <CycleProofCard label="Before repair" proof={failedProof} />
+              <CycleProofCard label="After repair" proof={verifiedProof} />
+            </div>
+            <p className="mt-3 break-all font-mono text-[0.62rem] text-muted">
+              packet sha256 {cycle.packetSha256}
+            </p>
           </div>
         ) : null}
 

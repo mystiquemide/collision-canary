@@ -1,0 +1,2 @@
+ALTER TABLE "verification_runs" ADD COLUMN "creator_fingerprint" text;--> statement-breakpoint
+CREATE INDEX "verification_runs_creator_fingerprint_idx" ON "verification_runs" USING btree ("creator_fingerprint");

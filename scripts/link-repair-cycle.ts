@@ -2,12 +2,6 @@ import { readFile, realpath } from "node:fs/promises";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 
-import {
-  linkRepairCycle,
-  RepairCycleLinkError,
-} from "@/modules/repair/link-repair-cycle";
-import { verifyRepairPacket } from "@/modules/repair/repair-packet";
-
 config({ path: ".env.local" });
 
 function argument(name: string): string {
@@ -27,6 +21,10 @@ async function packetPathInsideRepository(path: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
+  const [{ linkRepairCycle }, { verifyRepairPacket }] = await Promise.all([
+    import("@/modules/repair/link-repair-cycle"),
+    import("@/modules/repair/repair-packet"),
+  ]);
   const failedRunId = argument("--failed-run");
   const verifiedRunId = argument("--verified-run");
   const packetFile = await packetPathInsideRepository(argument("--packet"));
@@ -50,8 +48,14 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  if (error instanceof RepairCycleLinkError) {
-    console.error(JSON.stringify({ code: error.code, message: error.message }));
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    error.code === "repair_cycle_invalid"
+  ) {
+    console.error(
+      JSON.stringify({ code: error.code, message: error.message }),
+    );
   } else {
     console.error(error);
   }

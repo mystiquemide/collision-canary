@@ -4,6 +4,7 @@ import {
   jsonResponse,
 } from "@/lib/http/json";
 import {
+  createRunFingerprint,
   createVerificationRun,
   PublicBaseUrlError,
   RunCreationCapacityError,
@@ -90,6 +91,7 @@ export async function POST(request: Request): Promise<Response> {
     const data = await createVerificationRun({
       scenarioKey: body.scenarioKey as ScenarioKey,
       baseUrl: resolvePublicBaseUrl(request.url),
+      creatorFingerprint: createRunFingerprint(request),
     });
 
     return jsonResponse(requestId, data, 201);

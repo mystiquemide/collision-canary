@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 
 import { neon } from "@neondatabase/serverless";
 import { createActorToken } from "@/lib/security/actor-token";
@@ -81,11 +81,32 @@ export function resolvePublicBaseUrl(requestUrl: string): string {
 type CreateRunInput = {
   scenarioKey: ScenarioKey;
   baseUrl: string;
+  creatorFingerprint: string;
 };
+
+export function createRunFingerprint(request: Request): string {
+  const secret = process.env.LAB_SIGNING_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("LAB_SIGNING_SECRET must contain at least 32 characters.");
+  }
+
+  const forwarded = request.headers
+    .get("x-forwarded-for")
+    ?.split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const address =
+    forwarded?.at(-1) || request.headers.get("x-real-ip")?.trim() || "local";
+
+  return createHmac("sha256", secret)
+    .update(`run-admission:${address}`)
+    .digest("hex");
+}
 
 export async function createVerificationRun({
   scenarioKey,
   baseUrl,
+  creatorFingerprint,
 }: CreateRunInput) {
   const scenario = SCENARIOS[scenarioKey];
   const runId = randomUUID();
@@ -105,18 +126,26 @@ export async function createVerificationRun({
         id,
         scenario_key,
         invariant_key,
+        creator_fingerprint,
         created_at
       )
       SELECT
         ${runId}::uuid,
         ${scenarioKey},
         ${scenario.invariantKey},
+        ${creatorFingerprint},
         ${createdAt}
       WHERE (
         SELECT count(*)
         FROM verification_runs
         WHERE created_at > now() - interval '1 hour'
       ) < 100
+        AND (
+          SELECT count(*)
+          FROM verification_runs
+          WHERE created_at > now() - interval '1 hour'
+            AND creator_fingerprint = ${creatorFingerprint}
+        ) < 20
       RETURNING id
     `,
     sqlClient`
