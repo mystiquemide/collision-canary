@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 
 const baseUrl = process.env.COLLISION_CANARY_BASE_URL ?? "http://127.0.0.1:3001";
 const failureFixture = process.env.COLLISION_CANARY_FAILURE_FIXTURE === "true";
@@ -25,6 +26,25 @@ function bearer(url: string): string {
 }
 
 async function main(): Promise<void> {
+  const invalidJson = await request("/api/v1/runs", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{",
+  });
+  assert.equal(invalidJson.status, 400);
+  assert.equal(invalidJson.body.error?.code, "invalid_json");
+
+  const unsupportedScenario = await request("/api/v1/runs", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      scenarioKey: "unknown-v1",
+      invariantKey: "unknown-v1",
+    }),
+  });
+  assert.equal(unsupportedScenario.status, 400);
+  assert.equal(unsupportedScenario.body.error?.code, "unsupported_scenario");
+
   const health = await request<{
     status: string;
     database: string;
@@ -57,6 +77,27 @@ async function main(): Promise<void> {
   const aliceToken = bearer(alice.url);
   const bobToken = bearer(bob.url);
   const actorHeaders = (token: string) => ({ authorization: `Bearer ${token}` });
+
+  const missingToken = await request(
+    `/api/v1/runs/${runId}/actors/alice/arm`,
+    { method: "POST" },
+  );
+  assert.equal(missingToken.status, 401);
+  assert.equal(missingToken.body.error?.code, "missing_bearer_token");
+
+  const crossScopedToken = await request(
+    `/api/v1/runs/${runId}/actors/alice/arm`,
+    { method: "POST", headers: actorHeaders(bobToken) },
+  );
+  assert.equal(crossScopedToken.status, 403);
+  assert.equal(crossScopedToken.body.error?.code, "actor_scope_mismatch");
+
+  const prematureClaim = await request(
+    `/api/v1/runs/${runId}/actors/alice/claim`,
+    { method: "POST", headers: actorHeaders(aliceToken) },
+  );
+  assert.equal(prematureClaim.status, 409);
+  assert.equal(prematureClaim.body.error?.code, "actor_not_released");
 
   const armAlice = await request<{ snapshot: { arrivedCount: number } }>(
     `/api/v1/runs/${runId}/actors/alice/arm`,
@@ -103,6 +144,18 @@ async function main(): Promise<void> {
     assert.deepEqual([aliceClaim.status, bobClaim.status].sort(), [200, 409]);
   }
 
+  const winnerToken =
+    aliceClaim.body.data?.outcome === "succeeded" ? aliceToken : bobToken;
+  const replay = await request<{ outcome: string; idempotent: boolean }>(
+    `/api/v1/runs/${runId}/actors/${
+      aliceClaim.body.data?.outcome === "succeeded" ? "alice" : "bob"
+    }/claim`,
+    { method: "POST", headers: actorHeaders(winnerToken) },
+  );
+  assert.equal(replay.status, 200);
+  assert.equal(replay.body.data?.outcome, "succeeded");
+  assert.equal(replay.body.data?.idempotent, true);
+
   const evaluated = await request<{ evaluation: { verdict: string } }>(
     `/api/v1/runs/${runId}/evaluate`,
     { method: "POST" },
@@ -147,6 +200,16 @@ async function main(): Promise<void> {
   });
   assert.equal(invalid.status, 400);
   assert.equal(invalid.body.error?.code, "invalid_request");
+
+  const invalidProofId = await request("/api/v1/runs/not-a-uuid/proof");
+  assert.equal(invalidProofId.status, 400);
+  assert.equal(invalidProofId.body.error?.code, "invalid_run_id");
+
+  const missingProof = await request(
+    `/api/v1/runs/${randomUUID()}/proof`,
+  );
+  assert.equal(missingProof.status, 404);
+  assert.equal(missingProof.body.error?.code, "run_not_found");
 
   console.log(
     JSON.stringify({

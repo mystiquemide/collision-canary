@@ -56,6 +56,7 @@ COLLISION_CANARY_FAILURE_FIXTURE=true COLLISION_CANARY_BASE_URL=http://127.0.0.1
 Focused backend checks:
 
 ```bash
+pnpm test:public-base-url
 pnpm test:actor-guards
 pnpm test:atomic-claims
 pnpm test:invariant-evaluator
@@ -90,6 +91,7 @@ Read the system decisions and trust boundaries in [docs/ARCHITECTURE.md](docs/AR
 
 - Neon Postgres is the shared-state authority.
 - Actor tokens are scoped and handed off through URL fragments, then sent in `Authorization` headers.
+- Production actor URLs use `NEXT_PUBLIC_APP_URL` or Vercel's deployment URL, never an untrusted host header.
 - Proof projections exclude tokens, credentials, and raw request headers.
 - Codex execution is local-only and is never imported by a public route.
 - A proof describes one observed run. It does not claim exhaustive verification of every possible schedule.

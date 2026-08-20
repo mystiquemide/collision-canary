@@ -119,6 +119,8 @@ produce `infra_error` instead of being presented as a product failure.
 
 - `LAB_SIGNING_SECRET` signs expiring actor tokens. Verification checks version,
   signature, expiry, run, and actor scope.
+- Production actor URLs use the configured application URL or Vercel deployment
+  URL. Development may fall back to the request origin for local testing.
 - Proof responses use an explicit allowlist. They omit actor tokens, credentials,
   database URLs, cookies, and raw request headers.
 - Public routes never spawn processes or invoke Codex.
@@ -151,6 +153,7 @@ pnpm db:check
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm audit --prod
+pnpm test:public-base-url
 pnpm test:actor-guards
 pnpm test:atomic-claims
 pnpm test:invariant-evaluator

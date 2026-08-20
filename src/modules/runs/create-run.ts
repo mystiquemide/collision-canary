@@ -33,6 +33,51 @@ export class RunCreationCapacityError extends Error {
   }
 }
 
+export class PublicBaseUrlError extends Error {
+  readonly code = "public_base_url_unavailable" as const;
+
+  constructor() {
+    super("A trusted public application URL is required in production.");
+    this.name = "PublicBaseUrlError";
+  }
+}
+
+function configuredPublicBaseUrl(): string | undefined {
+  const configured =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.VERCEL_URL?.trim();
+
+  if (!configured) return undefined;
+  return /^https?:\/\//i.test(configured)
+    ? configured
+    : `https://${configured}`;
+}
+
+export function resolvePublicBaseUrl(requestUrl: string): string {
+  const configured = configuredPublicBaseUrl();
+
+  if (!configured && process.env.NODE_ENV === "production") {
+    throw new PublicBaseUrlError();
+  }
+
+  let parsed: URL;
+
+  try {
+    parsed = new URL(configured ?? requestUrl);
+  } catch {
+    throw new PublicBaseUrlError();
+  }
+
+  if (
+    !["http:", "https:"].includes(parsed.protocol) ||
+    parsed.username ||
+    parsed.password
+  ) {
+    throw new PublicBaseUrlError();
+  }
+
+  return parsed.origin;
+}
+
 type CreateRunInput = {
   scenarioKey: ScenarioKey;
   baseUrl: string;

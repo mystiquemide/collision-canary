@@ -5,9 +5,11 @@ import {
 } from "@/lib/http/json";
 import {
   createVerificationRun,
+  PublicBaseUrlError,
   RunCreationCapacityError,
   SCENARIOS,
   type ScenarioKey,
+  resolvePublicBaseUrl,
 } from "@/modules/runs/create-run";
 
 type CreateRunBody = {
@@ -62,13 +64,17 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const data = await createVerificationRun({
       scenarioKey: body.scenarioKey as ScenarioKey,
-      baseUrl: new URL(request.url).origin,
+      baseUrl: resolvePublicBaseUrl(request.url),
     });
 
     return jsonResponse(requestId, data, 201);
   } catch (error) {
     if (error instanceof RunCreationCapacityError) {
       return errorResponse(requestId, error.code, error.message, 429);
+    }
+
+    if (error instanceof PublicBaseUrlError) {
+      return errorResponse(requestId, error.code, error.message, 500);
     }
 
     console.error(

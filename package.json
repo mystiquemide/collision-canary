@@ -13,6 +13,7 @@
     "test:actor-guards": "tsx scripts/verify-actor-guards.ts",
     "test:atomic-claims": "tsx scripts/verify-atomic-claims.ts",
     "test:invariant-evaluator": "tsx scripts/verify-invariant-evaluator.ts",
+    "test:public-base-url": "tsx scripts/verify-public-base-url.ts",
     "test:backend-http": "tsx scripts/verify-backend-http.ts",
     "build:repair-packet": "tsx scripts/build-repair-packet.ts",
     "repair:codex": "tsx scripts/repair-with-codex.ts"
