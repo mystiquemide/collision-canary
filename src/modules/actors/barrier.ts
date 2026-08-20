@@ -1,9 +1,17 @@
 import { and, eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { neon } from "@neondatabase/serverless";
 
 import { db } from "@/db/client";
 import { runActors, runBarriers } from "@/db/schema";
 import type { ActorStatus } from "@/modules/actors/actor-guards";
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required for barrier transactions.");
+}
+
+const sqlClient = neon(databaseUrl);
 
 export type ActorKey = "alice" | "bob";
 
@@ -91,7 +99,8 @@ export async function armActor({
   actorKey: ActorKey;
   actorId: string;
 }): Promise<{ transitioned: boolean; snapshot: BarrierSnapshot } | null> {
-  const result = await db.execute(sql`
+  const [barrierRows] = await sqlClient.transaction([
+    sqlClient`
     WITH existing_barrier AS (
       SELECT run_id
       FROM run_barriers
@@ -123,17 +132,6 @@ export async function armActor({
         AND arrived_count < expected_count
         AND EXISTS (SELECT 1 FROM armed)
       RETURNING run_id, arrived_count, expected_count, release_version, released_at
-    ), released_actors AS (
-      UPDATE run_actors
-      SET status = 'released'::actor_status
-      WHERE run_id = ${runId}::uuid
-        AND (status = 'armed'::actor_status OR id = ${actorId}::uuid)
-        AND EXISTS (
-          SELECT 1
-          FROM barrier
-          WHERE barrier.arrived_count >= barrier.expected_count
-        )
-      RETURNING id
     ), run_state AS (
       UPDATE verification_runs
       SET status = CASE
@@ -157,9 +155,24 @@ export async function armActor({
       (SELECT expected_count FROM barrier) AS "expectedCount",
       (SELECT release_version FROM barrier) AS "releaseVersion",
       (SELECT released_at FROM barrier) AS "releasedAt"
-  `);
+  `,
+    sqlClient`
+      UPDATE run_actors
+      SET status = 'released'::actor_status
+      WHERE run_id = ${runId}::uuid
+        AND status = 'armed'::actor_status
+        AND EXISTS (
+          SELECT 1
+          FROM run_barriers
+          WHERE run_id = ${runId}::uuid
+            AND arrived_count >= expected_count
+        )
+    `,
+  ]);
 
-  const row = result.rows[0] as BarrierRow & { armedActorId: string | null } | undefined;
+  const row = (barrierRows as unknown[])[0] as
+    | (BarrierRow & { armedActorId: string | null })
+    | undefined;
 
   if (!row?.armedActorId) {
     const snapshot = await readActorBarrier({ runId, actorKey });
