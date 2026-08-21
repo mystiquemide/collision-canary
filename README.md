@@ -28,9 +28,42 @@ Collision Canary drives two real browser actors at the exact same moment and pro
 4. The evaluator classifies the observed state as satisfied or violated against a declared invariant: at most one actor can claim the seat.
 5. A violated run produces a redacted repair packet for a local Codex repair. You re-run and prove the fix.
 
-![Collision Canary architecture](assets/diagrams/architecture.png)
+```mermaid
+flowchart TB
+    Kane["Kane CLI<br/>two isolated Chrome sessions"]
+    Alice["Alice browser"]
+    Bob["Bob browser"]
+    Routes["Next.js route handlers"]
+    Barrier["Shared database barrier"]
+    Claim["Atomic claim transaction"]
+    Neon[("Neon Postgres")]
+    Evaluate["Invariant evaluator"]
+    Proof["Redacted proof projection"]
+    Packet["Hashed repair packet"]
+    Codex["Local Codex adapter"]
 
-[View the Mermaid runtime diagram](docs/ARCHITECTURE.md#system-boundary).
+    Kane --> Alice
+    Kane --> Bob
+    Alice -->|"fragment token + bearer auth"| Routes
+    Bob -->|"fragment token + bearer auth"| Routes
+    Routes --> Barrier --> Claim
+    Claim <--> Neon
+    Neon --> Evaluate --> Proof
+    Proof -->|"violated run"| Packet --> Codex
+    Codex -->|"scoped repair and rerun"| Kane
+
+    classDef actor fill:#17202b,stroke:#f5b93b,color:#f3f5f7;
+    classDef app fill:#102a2b,stroke:#34d399,color:#f3f5f7;
+    classDef db fill:#21183b,stroke:#a78bfa,color:#f3f5f7;
+    classDef repair fill:#351a28,stroke:#fb7185,color:#f3f5f7;
+
+    class Kane,Alice,Bob actor;
+    class Routes,Barrier,Claim,Evaluate,Proof app;
+    class Neon db;
+    class Packet,Codex repair;
+```
+
+Full architecture decisions: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Kane CLI
 
