@@ -28,11 +28,14 @@ export function ActorLab() {
   const [seatsLeft, setSeatsLeft] = useState<number | null>(null);
   const ctx = useRef<Ctx | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const shouldAutoStart = useRef(false);
+  const autoStarted = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const runId = params.get("runId") ?? "";
     const actor = params.get("actor") ?? "";
+    shouldAutoStart.current = params.get("auto") === "1";
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const token = hash.get("token") ?? "";
 
@@ -133,6 +136,19 @@ export function ActorLab() {
       setPhase("error");
     }
   }, [api, claim, startPolling]);
+
+  useEffect(() => {
+    if (
+      phase !== "ready" ||
+      !shouldAutoStart.current ||
+      autoStarted.current
+    ) {
+      return;
+    }
+
+    autoStarted.current = true;
+    void arm();
+  }, [arm, phase]);
 
   return (
     <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-[0_14px_40px_rgba(30,40,60,0.10)]">

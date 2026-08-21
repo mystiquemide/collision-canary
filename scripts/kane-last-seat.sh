@@ -48,17 +48,27 @@ echo "Run: ${RUN_ID}"
 
 python3 - "${ALICE_URL}" "${WORK_DIR}/alice-variables.json" <<'PY'
 import json, sys
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+parts = urlsplit(sys.argv[1])
+query = parse_qsl(parts.query, keep_blank_values=True)
+query.append(("auto", "1"))
+url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 with open(sys.argv[2], "w", encoding="utf-8") as handle:
-    json.dump({"alice_url": {"value": sys.argv[1], "type": "text", "secret": True}}, handle)
+    json.dump({"alice_url": {"value": url, "type": "text", "secret": True}}, handle)
 PY
 python3 - "${BOB_URL}" "${WORK_DIR}/bob-variables.json" <<'PY'
 import json, sys
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+parts = urlsplit(sys.argv[1])
+query = parse_qsl(parts.query, keep_blank_values=True)
+query.append(("auto", "1"))
+url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 with open(sys.argv[2], "w", encoding="utf-8") as handle:
-    json.dump({"bob_url": {"value": sys.argv[1], "type": "text", "secret": True}}, handle)
+    json.dump({"bob_url": {"value": url, "type": "text", "secret": True}}, handle)
 PY
 
-ALICE_OBJECTIVE='Go to {{alice_url}}, click the "Arm claim" button exactly once, and wait for the final booking result. Store the full result message as "outcome". The only acceptable final results are that this actor claimed the final seat or that the final seat was already claimed. Treat a timeout, missing peer, infrastructure message, or generic error as a failed objective.'
-BOB_OBJECTIVE='Go to {{bob_url}}, click the "Arm claim" button exactly once, and wait for the final booking result. Store the full result message as "outcome". The only acceptable final results are that this actor claimed the final seat or that the final seat was already claimed. Treat a timeout, missing peer, infrastructure message, or generic error as a failed objective.'
+ALICE_OBJECTIVE='Go to {{alice_url}} and wait for the final booking result. Store the full result message as "outcome". The only acceptable final results are that this actor claimed the final seat or that the final seat was already claimed. Treat a timeout, missing peer, infrastructure message, or generic error as a failed objective.'
+BOB_OBJECTIVE='Go to {{bob_url}} and wait for the final booking result. Store the full result message as "outcome". The only acceptable final results are that this actor claimed the final seat or that the final seat was already claimed. Treat a timeout, missing peer, infrastructure message, or generic error as a failed objective.'
 
 echo "Launching Alice and Bob as two parallel Kane sessions ..."
 kane-cli run "${ALICE_OBJECTIVE}" --agent --headless --timeout 180 --max-steps 20 \
