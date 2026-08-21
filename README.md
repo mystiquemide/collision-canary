@@ -6,7 +6,11 @@ Collision Canary drives two real browser actors at the exact same moment and pro
 
 **Live app: https://collision-canary.vercel.app**
 
-![Collision Canary architecture](assets/diagrams/architecture.png)
+**Demo video: https://drive.google.com/file/d/1oIxXEDN20dNfqA3UdUEC1QTvWWY8IViM/view?usp=sharing**
+
+**Live repair cycle:** [collision proof](https://collision-canary.vercel.app/runs/d8e7fdcb-e92f-4676-88a3-32f1fc957e7d) → [verified Kane rerun](https://collision-canary.vercel.app/runs/62b8a1fc-c555-455b-9d4e-24367a151ef8)
+
+![A real collision proof linked to its verified rerun](assets/screenshots/repair-cycle.png)
 
 ## Try it in about a minute
 
@@ -23,6 +27,8 @@ Collision Canary drives two real browser actors at the exact same moment and pro
 3. Each actor runs the claim path, which writes a persisted outcome.
 4. The evaluator classifies the observed state as satisfied or violated against a declared invariant: at most one actor can claim the seat.
 5. A violated run produces a redacted repair packet for a local Codex repair. You re-run and prove the fix.
+
+![Collision Canary architecture](assets/diagrams/architecture.png)
 
 ## Kane CLI
 
