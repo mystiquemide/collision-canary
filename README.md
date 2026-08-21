@@ -30,6 +30,8 @@ Collision Canary drives two real browser actors at the exact same moment and pro
 
 ![Collision Canary architecture](assets/diagrams/architecture.png)
 
+[View the Mermaid runtime diagram](docs/ARCHITECTURE.md#system-boundary).
+
 ## Kane CLI
 
 The actor lab at `/lab/last-seat` is a real browser surface built to be driven by Kane CLI. Each run hands out two tokenized actor URLs. Kane opens them as two independent Chrome sessions and performs the arm and claim steps, so the collision is produced by real browsers against real shared state, not by request mocks. The same lab works if you open the two links by hand.

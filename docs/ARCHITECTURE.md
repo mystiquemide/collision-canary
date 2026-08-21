@@ -7,14 +7,53 @@ declared invariant.
 
 ## System boundary
 
-```text
-Browser actors or HTTP verifier
-          |
-          v
-Next.js route handlers
-          |
-          v
-Neon Postgres  <--- local repair packet + Codex adapter
+```mermaid
+flowchart TB
+    subgraph Actors["Real browser actors"]
+        direction LR
+        Kane["Kane CLI<br/>two isolated Chrome sessions"]
+        Alice["Alice browser"]
+        Bob["Bob browser"]
+        Kane --> Alice
+        Kane --> Bob
+    end
+
+    subgraph App["Collision Canary on Vercel"]
+        direction LR
+        Routes["Next.js route handlers"]
+        Barrier["Shared database barrier"]
+        Claim["Atomic claim transaction"]
+        Evaluate["Invariant evaluator"]
+        Proof["Redacted proof projection"]
+        Routes --> Barrier --> Claim --> Evaluate --> Proof
+    end
+
+    Neon[("Neon Postgres")]
+
+    subgraph Repair["Evidence-bound local repair"]
+        direction LR
+        Packet["Hashed repair packet"]
+        Codex["Local Codex adapter"]
+        Backend["Allowlisted backend repair"]
+        Packet --> Codex --> Backend
+    end
+
+    Alice -->|"fragment token<br/>bearer auth"| Routes
+    Bob -->|"fragment token<br/>bearer auth"| Routes
+    Claim <--> Neon
+    Neon --> Evaluate
+    Proof -->|"violated run"| Packet
+    Backend -->|"rerun"| Kane
+
+    classDef actor fill:#17202b,stroke:#f5b93b,color:#f3f5f7;
+    classDef app fill:#102a2b,stroke:#34d399,color:#f3f5f7;
+    classDef db fill:#21183b,stroke:#a78bfa,color:#f3f5f7;
+    classDef repair fill:#351a28,stroke:#fb7185,color:#f3f5f7;
+
+    class Kane,Alice,Bob actor;
+    class Routes,Barrier,Claim,Evaluate,Proof app;
+    class Neon db;
+    class Packet,Codex,Backend repair;
 ```
 
 Neon is the authority for run state. Vercel function memory is never used for
