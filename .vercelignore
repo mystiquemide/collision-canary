@@ -1,0 +1,14 @@
+.collision-canary/
+.testmuai/
+.env*
+!.env.example
+.git/
+.next/
+.vercel/
+node_modules/
+memory.md
+AGENTS.md
+docs/PRD.md
+docs/TASKS.md
+assets/brand/*-concept.png
+assets/brand/*-preview.png

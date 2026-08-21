@@ -13,7 +13,7 @@
 # winner and one correct rejection (invariant satisfied). The controlled
 # violation is a local-only fixture and is intentionally disabled in prod.
 #
-# Requirements: kane-cli (authenticated), curl, python3.
+# Requirements: kane-cli (authenticated), Google Chrome, curl, python3.
 # Usage: bash scripts/kane-last-seat.sh
 #   Override target with COLLISION_CANARY_BASE_URL=https://...
 
@@ -28,9 +28,49 @@ case "${WORK_DIR}" in
   /tmp/collision-canary-kane.*) ;;
   *) echo "Unexpected Kane work directory: ${WORK_DIR}" >&2; exit 1 ;;
 esac
-trap 'rm -rf -- "${WORK_DIR}"' EXIT
+
+CHROME_A_PID=""
+CHROME_B_PID=""
+cleanup() {
+  for pid in "${CHROME_A_PID}" "${CHROME_B_PID}"; do
+    if [[ -n "${pid}" ]] && kill -0 -- "-${pid}" 2>/dev/null; then
+      kill -- "-${pid}" 2>/dev/null || true
+      wait "${pid}" 2>/dev/null || true
+    fi
+  done
+  for _ in {1..10}; do
+    rm -rf -- "${WORK_DIR}" 2>/dev/null || true
+    [[ ! -e "${WORK_DIR}" ]] && return 0
+    sleep 0.1
+  done
+  printf '%s\n' "Kane temporary directory could not be removed: ${WORK_DIR}" >&2
+  return 0
+}
+trap cleanup EXIT
 
 mkdir -p "${WORK_DIR}/alice-profile" "${WORK_DIR}/bob-profile"
+
+wait_for_cdp() {
+  local profile="$1"
+  local pid="$2"
+  local label="$3"
+  local port_file="${profile}/DevToolsActivePort"
+
+  for _ in {1..50}; do
+    if [[ -s "${port_file}" ]]; then
+      printf 'http://127.0.0.1:%s\n' "$(sed -n '1p' "${port_file}")"
+      return 0
+    fi
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      printf '%s\n' "${label} Chrome exited before CDP was ready." >&2
+      return 1
+    fi
+    sleep 0.2
+  done
+
+  printf '%s\n' "${label} Chrome did not expose CDP in time." >&2
+  return 1
+}
 
 echo "Creating a run at ${BASE} ..."
 RUN_JSON="$(curl --fail-with-body -sS -X POST "${BASE}/api/v1/runs" \
@@ -67,19 +107,33 @@ with open(sys.argv[2], "w", encoding="utf-8") as handle:
     json.dump({"bob_url": {"value": url, "type": "text", "secret": True}}, handle)
 PY
 
-ALICE_OBJECTIVE='Go to {{alice_url}} and wait for the final booking result. Store the full result message as "outcome". The only acceptable final results are that this actor claimed the final seat or that the final seat was already claimed. Treat a timeout, missing peer, infrastructure message, or generic error as a failed objective.'
-BOB_OBJECTIVE='Go to {{bob_url}} and wait for the final booking result. Store the full result message as "outcome". The only acceptable final results are that this actor claimed the final seat or that the final seat was already claimed. Treat a timeout, missing peer, infrastructure message, or generic error as a failed objective.'
+ALICE_OBJECTIVE='Go to {{alice_url}}, wait 12 seconds for the paired booking to finish, and verify through the page text that the final result says either "The actor claimed the final seat" or "The final seat was already claimed". Fail if the page shows a timeout, missing token, missing peer, or generic error.'
+BOB_OBJECTIVE='Go to {{bob_url}}, wait 12 seconds for the paired booking to finish, and verify through the page text that the final result says either "The actor claimed the final seat" or "The final seat was already claimed". Fail if the page shows a timeout, missing token, missing peer, or generic error.'
+
+setsid google-chrome --headless=new --no-sandbox --disable-dev-shm-usage \
+  --remote-debugging-address=127.0.0.1 --remote-debugging-port=0 \
+  --user-data-dir="${WORK_DIR}/alice-profile" about:blank \
+  >"${WORK_DIR}/alice-chrome.log" 2>&1 &
+CHROME_A_PID=$!
+setsid google-chrome --headless=new --no-sandbox --disable-dev-shm-usage \
+  --remote-debugging-address=127.0.0.1 --remote-debugging-port=0 \
+  --user-data-dir="${WORK_DIR}/bob-profile" about:blank \
+  >"${WORK_DIR}/bob-chrome.log" 2>&1 &
+CHROME_B_PID=$!
+
+ALICE_CDP="$(wait_for_cdp "${WORK_DIR}/alice-profile" "${CHROME_A_PID}" "Alice")"
+BOB_CDP="$(wait_for_cdp "${WORK_DIR}/bob-profile" "${CHROME_B_PID}" "Bob")"
 
 echo "Launching Alice and Bob as two parallel Kane sessions ..."
 kane-cli run "${ALICE_OBJECTIVE}" --agent --headless --timeout 180 --max-steps 20 \
-  --mode action --assertion-mode dom --final-validation on \
-  --chrome-profile "${WORK_DIR}/alice-profile" \
+  --mode action --assertion-mode dom \
+  --cdp-endpoint "${ALICE_CDP}" \
   --variables-file "${WORK_DIR}/alice-variables.json" \
   >"${WORK_DIR}/alice.ndjson" 2>"${WORK_DIR}/alice.err" &
 PID_A=$!
 kane-cli run "${BOB_OBJECTIVE}" --agent --headless --timeout 180 --max-steps 20 \
-  --mode action --assertion-mode dom --final-validation on \
-  --chrome-profile "${WORK_DIR}/bob-profile" \
+  --mode action --assertion-mode dom \
+  --cdp-endpoint "${BOB_CDP}" \
   --variables-file "${WORK_DIR}/bob-variables.json" \
   >"${WORK_DIR}/bob.ndjson" 2>"${WORK_DIR}/bob.err" &
 PID_B=$!
@@ -108,25 +162,15 @@ actors = [
     ("Alice", sys.argv[1], int(sys.argv[2])),
     ("Bob", sys.argv[3], int(sys.argv[4])),
 ]
-outcomes = []
 failed = False
 for name, path, exit_code in actors:
     final = run_end(path)
     status = str((final or {}).get("status") or "missing")
-    state = (final or {}).get("final_state") or {}
-    outcome = str(state.get("outcome") or "")
     reason = str((final or {}).get("reason") or "No run_end event was emitted.")
-    print(f"{name}: {status} | {outcome or 'no outcome'}")
+    print(f"{name}: {status}")
     if exit_code != 0 or status != "passed":
         print(f"{name} reason: {reason}", file=sys.stderr)
         failed = True
-    outcomes.append(outcome)
-
-winner_count = sum("claimed the final seat" in outcome for outcome in outcomes)
-rejection_count = sum("already claimed" in outcome for outcome in outcomes)
-if winner_count != 1 or rejection_count != 1:
-    print("Expected one winner and one rejection from Kane.", file=sys.stderr)
-    failed = True
 
 if failed:
     raise SystemExit(1)
@@ -144,6 +188,9 @@ python3 - "${PROOF}" "${BASE}" "${RUN_ID}" <<'PY'
 import sys, json
 proof = json.loads(sys.argv[1])["data"]
 ev = proof.get("evaluation") or {}
+actor_statuses = sorted(actor.get("status") for actor in proof.get("actors", []))
+outcome_codes = sorted(actor.get("outcomeCode") for actor in proof.get("actors", []))
+attempt_results = sorted(attempt.get("result") for attempt in proof.get("attempts", []))
 if (
     proof.get("run", {}).get("status") != "verified"
     or ev.get("verdict") != "satisfied"
@@ -151,6 +198,9 @@ if (
     or ev.get("successfulClaims") != 1
     or ev.get("persistedClaims") != 1
     or ev.get("finalRemaining") != 0
+    or actor_statuses != ["rejected", "succeeded"]
+    or outcome_codes != ["seat_claimed", "seat_unavailable"]
+    or attempt_results != ["rejected", "succeeded"]
 ):
     raise SystemExit("Persisted proof did not satisfy the last-seat invariant.")
 print(
